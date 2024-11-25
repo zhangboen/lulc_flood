@@ -23,6 +23,8 @@ print(sys.argv)
 # read dataset
 df = pd.read_csv(f'../data/{target}_final_dataset_filter.csv')
 
+df = df.iloc[:50000,:]
+
 # define predictors and predictand
 predictors = [  'BDTICM', 'elevation', 'slope', 'aridity', 
                 'sedimentary', 'plutonic', 'volcanic', 'metamorphic',
