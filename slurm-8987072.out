@@ -1,0 +1,4 @@
+Columns (58,59,62,74) have mixed types. Specify dtype option on import or set low_memory=False.
+invalid value encountered in scalar divide
+invalid value encountered in scalar divide
+slurmstepd: error: *** JOB 8987072 ON arc-c092 CANCELLED AT 2024-11-25T04:31:51 DUE TO TIME LIMIT ***
