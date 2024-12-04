@@ -1,0 +1,8 @@
+Columns (88,89,92,104) have mixed types. Specify dtype option on import or set low_memory=False.
+['ml_flood.py', 'Qmin7', 'rf', 'no']
+rf 53.0% stations have KGE > 0
+rf 27.0% stations have KGE > 0.3
+rf 41.0% stations have R2 >= 0.3
+rf Median KGE   is 0.02   Ave KGE   is -0.86
+rf Median r     is 0.44   Ave r     is 0.45
+rf Median nRMSE is 15.62   Ave nRMSE is 192213.18

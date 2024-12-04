@@ -89,8 +89,12 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
     if addDiagnol:
         ax1.axline((min0,min0), (max0,max0), color = 'k', ls = (0,(5,5)))
     if log:
-        ax1.set_yscale('log')
-        ax1.set_xscale('log')
+        if (x==0).any() or (y==0).any():
+            ax1.set_xscale('symlog')
+            ax1.set_yscale('symlog')
+        else:
+            ax1.set_yscale('log')
+            ax1.set_xscale('log')
     ax1.set_xlim(min0*0.99, max0*1.01)
     ax1.set_ylim(min0*0.99, max0*1.01)
     ax1.set_aspect('equal', adjustable='box')

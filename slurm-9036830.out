@@ -1,0 +1,12 @@
+Columns (88,89,92,104) have mixed types. Specify dtype option on import or set low_memory=False.
+['ml_flood.py', 'Qmax7', 'rf', 'no']
+Traceback (most recent call last):
+  File "/data/ouce-drift/cenv1021/attribution_test/lulc_flood/ml_flood.py", line 84, in <module>
+    X = df[predictors]
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/frame.py", line 3813, in __getitem__
+    indexer = self.columns._get_indexer_strict(key, "columns")[1]
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/indexes/base.py", line 6070, in _get_indexer_strict
+    self._raise_if_missing(keyarr, indexer, axis_name)
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/indexes/base.py", line 6133, in _raise_if_missing
+    raise KeyError(f"{not_found} not in index")
+KeyError: "['res_darea_normalize', 'Year_ave', 'Main_Purpose_fisheries', 'Main_Purpose_flood control', 'Main_Purpose_hydroelectricity', 'Main_Purpose_irrigation', 'Main_Purpose_livestock', 'Main_Purpose_navigation', 'Main_Purpose_nores', 'Main_Purpose_other', 'Main_Purpose_other/not specified', 'Main_Purpose_recreation', 'Main_Purpose_water supply', 'climate_label_cold', 'climate_label_dry', 'climate_label_polar', 'climate_label_temperate', 'climate_label_tropical'] not in index"

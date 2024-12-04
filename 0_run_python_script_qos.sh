@@ -5,10 +5,10 @@
 #SBATCH --partition=short
 #SBATCH --account=ouce-evoflood
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --qos=priority
 #SBATCH --clusters=arc
-#SBATCH --cpus-per-task=36
+#SBATCH --cpus-per-task=24
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=4000
 

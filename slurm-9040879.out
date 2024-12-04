@@ -1,0 +1,11 @@
+['ml_flood.py', 'Qmax7', 'rf', 'no']
+Traceback (most recent call last):
+  File "/data/ouce-drift/cenv1021/attribution_test/lulc_flood/ml_flood.py", line 137, in <module>
+    df_sta = df.groupby(['ohdb_id','ohdb_latitude', 'ohdb_longitude','climate_label']).apply(
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/frame.py", line 8402, in groupby
+    return DataFrameGroupBy(
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/groupby/groupby.py", line 965, in __init__
+    grouper, exclusions, obj = get_grouper(
+  File "/home/cenv1021/.local/lib/python3.9/site-packages/pandas/core/groupby/grouper.py", line 888, in get_grouper
+    raise KeyError(gpr)
+KeyError: 'climate_label'
