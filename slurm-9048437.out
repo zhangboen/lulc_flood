@@ -1,0 +1,7 @@
+['ml_flood.py', 'Qmin7', 'rf', 'no']
+rf 78.0% stations have KGE > 0
+rf 55.0% stations have KGE > 0.3
+rf 65.0% stations have R2 >= 0.3
+rf Median KGE   is 0.36   Ave KGE   is -0.05
+rf Median r     is 0.68   Ave r     is 0.6
+rf Median nRMSE is 17.89   Ave nRMSE is 9680.56
