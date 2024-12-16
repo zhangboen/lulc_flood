@@ -1,0 +1,87 @@
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda deactivate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda deactivate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+['xgb_flood.py', '../data/Qmin7_final_dataset_seasonal4_multi_MSWX_meteo.csv', 'shap']
+(1512594, 131)
+ BDTICM elevation slope aridity sedimentary plutonic
+ volcanic metamorphic clay sand silt Porosity_x
+ logK_Ice_x ohdb_latitude ohdb_longitude year season_id freeze
+ climate basin_id lwd_3 p_3 pres_3 relhum_3
+ swd_3 spechum_3 tmax_3 tmin_3 wind_3 lwd_7
+ p_7 pres_7 relhum_7 swd_7 spechum_7 tmax_7
+ tmin_7 wind_7 lwd_15 p_15 pres_15 relhum_15
+ swd_15 spechum_15 tmax_15 tmin_15 wind_15 lwd_30
+ p_30 pres_30 relhum_30 swd_30 spechum_30 tmax_30
+ tmin_30 wind_30 p_365 runoff_ratio slope_fdc Q10_50
+ high_q_freq low_q_freq zero_q_freq cv high_q_dur low_q_dur
+ BFI lagT noResRatio FI p_mean stream_elas
+ hfd_mean tmax_ave tmax_std ImperviousSurface crop forest
+ grass water wetland res_darea_normalize Year_ave Main_Purpose_id
+
+<class 'shap._explanation.Explanation'>
+Traceback (most recent call last):
+  File "/data/ouce-drift/cenv1021/attribution_test/lulc_flood/xgb_flood.py", line 268, in <module>
+    shap_interaction_values = explainer.shap_interaction_values(X)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cenv1021/.conda/envs/xgb/lib/python3.12/site-packages/shap/explainers/_tree.py", line 597, in shap_interaction_values
+    phi = self.model.original_model.predict(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cenv1021/.conda/envs/xgb/lib/python3.12/site-packages/xgboost/core.py", line 2384, in predict
+    _check_call(
+  File "/home/cenv1021/.conda/envs/xgb/lib/python3.12/site-packages/xgboost/core.py", line 284, in _check_call
+    raise XGBoostError(py_str(_LIB.XGBGetLastError()))
+xgboost.core.XGBoostError: [11:25:13] /home/conda/feedstock_root/build_artifacts/xgboost-split_1733179637554/work/src/c_api/../common/device_helpers.cuh:393: Memory allocation error on worker 0: std::bad_alloc: cudaErrorMemoryAllocation: out of memory
+- Free memory: 22477799424
+- Requested memory: 43713966600
+
+Stack trace:
+  [bt] (0) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x6e) [0x1478d71a944e]
+  [bt] (1) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(dh::detail::ThrowOOMError(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, unsigned long)+0x1e1) [0x1478d782f711]
+  [bt] (2) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(thrust::THRUST_200601_500_600_700_800_900_NS::detail::vector_base<float, dh::detail::XGBDefaultDeviceAllocatorImpl<float> >::append(unsigned long)+0x40d) [0x1478d789070d]
+  [bt] (3) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(+0xab98ae) [0x1478d78a28ae]
+  [bt] (4) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(xgboost::HostDeviceVector<float>::DeviceSpan()+0x55) [0x1478d78be9e5]
+  [bt] (5) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(xgboost::predictor::GPUPredictor::PredictInteractionContributions(xgboost::DMatrix*, xgboost::HostDeviceVector<float>*, xgboost::gbm::GBTreeModel const&, unsigned int, std::vector<float, std::allocator<float> > const*, bool) const+0x236) [0x1478d7c43e06]
+  [bt] (6) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(xgboost::gbm::GBTree::PredictInteractionContributions(xgboost::DMatrix*, xgboost::HostDeviceVector<float>*, int, int, bool)+0x9e) [0x1478d752121e]
+  [bt] (7) /home/cenv1021/.conda/envs/xgb/lib/libxgboost.so(XGBoosterPredictFromDMatrix+0x2c9) [0x1478d70b33c9]
+  [bt] (8) /home/cenv1021/.conda/envs/xgb/lib/python3.12/lib-dynload/../../libffi.so.8(+0x6a4a) [0x1478eb992a4a]
+
+
+
+real	3m10.918s
+user	2m1.877s
+sys	0m43.280s

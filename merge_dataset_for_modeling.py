@@ -9,12 +9,20 @@ if target not in ['Qmax7','Qmin7']:
 
 ###################################################################
 # read meteo dataset
-if target == 'Qmax7':
-    df_meteo = pd.concat([pd.read_csv(fname) for fname in glob.glob('../data/Qmax7_seasonal4_MSWX_meteo_multi_[0-9][0-9][0-9][0-9].csv')])
-    df_meteo = df_meteo.rename(columns={'Qmax7':'Q'})
-else:
-    df_meteo = pd.concat([pd.read_csv(fname) for fname in glob.glob('../data/Qmin7_seasonal4_MSWX_meteo_multi_[0-9][0-9][0-9][0-9].csv')])
-    df_meteo = df_meteo.rename(columns={'Qmin7':'Q'})
+fname = f'../data/{target}_seasonal_multi_MSWX_meteo.csv'
+df_meteo = pd.read_csv(fname)
+
+# merge with discharge
+df_dis = pd.read_csv('../data/dis_OHDB_seasonal_Qmin7_Qmax7_1982-2023.csv')
+
+df_meteo[target+'date'] = pd.to_datetime(df_meteo[target+'date'])
+df_dis[target+'date'] = pd.to_datetime(df_dis[target+'date'])
+
+df_meteo = df_meteo.merge(df_dis[[target+'date','season','year',target, 'ohdb_id']], on = ['ohdb_id', target+'date'])
+df_meteo = df_meteo.rename(columns={target:'Q'})
+
+# add month variable
+df_meteo['month'] = df_meteo[target+'date'].dt.month
 
 # read lulc dataset
 df_lulc = pd.concat([pd.read_csv(fname).set_index('ohdb_id') for fname in glob.glob('../ee_lulc/*csv')], axis = 1).reset_index()
@@ -47,13 +55,18 @@ df_attr = df_attr.drop(columns=[
     'ohdb_altitude', 'ohdb_catchment_area', 'ohdb_is_public', 'ohdb_start_year', 'ohdb_end_year',
     'ohdb_data_availability', 'ohdb_post1983_data_availability', 'ohdb_duplicated_country', 'ohdb_river', 'ohdb_station_name',
     'domain', 'ohdbDarea0', 'ohdb_source_id', 
-])
+], errors = 'ignore')
 
 # add climate 
 ds = xr.open_dataset('../../data/koppen_5class_0p5.nc')
 df_attr['climate'] = df_attr.apply(lambda x:float(ds.koppen.sel(lon=x.ohdb_longitude, lat=x.ohdb_latitude, method='nearest').values), axis = 1)
 df_attr['climate_label'] = df_attr.climate.map({1:'tropical',2:'dry',3:'temperate',4:'cold',5:'polar'})
 ds.close()
+
+# create average fraction of sand, silt, and clay across different layers of soil
+df_attr['clay'] = df_attr.loc[:,df_attr.columns.str.contains('clay_layer')].mean(axis = 1)
+df_attr['sand'] = df_attr.loc[:,df_attr.columns.str.contains('sand_layer')].mean(axis = 1)
+df_attr['silt'] = df_attr.loc[:,df_attr.columns.str.contains('silt_layer')].mean(axis = 1)
 
 # merge
 df = df_meteo.merge(df_lulc, on = ['ohdb_id','year']).merge(df_attr, on = 'ohdb_id')
@@ -68,9 +81,13 @@ df = df.merge(dam, on = 'ohdb_id', how = 'left')
 df['res_darea_normalize'] = df['res_darea_normalize'].fillna(0)
 df['Year_ave'] = df['Year_ave'].fillna(2024)
 df['Main_Purpose'] = df['Main_Purpose'].fillna('NoRes').str.lower()
+df.loc[df.Main_Purpose.str.contains('not specified'),'Main_Purpose'] = 'other'
 
-# create dummy variable for main purpose of dams
-df = pd.get_dummies(df, columns = ['Main_Purpose','climate_label'])
-print(df.shape, df.columns.tolist())
+# round small values to 0.001
+df.loc[(df.Q>0)&(df.Q<0.001),'Q'] = 0.001
 
-df.to_csv(f'../data/{target}_final_dataset_seasonal4_multi_MSWX_meteo.csv', index = False)
+if 'seasonal4' in fname:
+    df.to_csv(f'../data/{target}_final_dataset_seasonal4_multi_MSWX_meteo.csv', index = False)
+else:
+    df.to_csv(f'../data/{target}_final_dataset_seasonal_multi_MSWX_meteo.csv', index = False)
+print(df.shape)

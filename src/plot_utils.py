@@ -110,11 +110,11 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
         alpha = np.round(alpha, 2)
         nse0 = np.round(nse0, 2)
         nRMSE = int(nRMSE)
-        ax1.text(.03, .97, 
+        ax1.text(.95, .05, 
                 'NSE = {:1.2f}\nnRMSE = {:1.0f}%\nKGE = {:1.2f}\nr = {:1.2f}\nβ = {:1.2f}\nα = {:1.2f}'.format(nse0, nRMSE, kge, r, beta, alpha),
                 linespacing = 1.5, 
                 transform=ax1.transAxes, 
                 size = fontsize, 
-                va = 'top', 
-                ha = 'left')
+                va = 'bottom', 
+                ha = 'right')
     return ax1

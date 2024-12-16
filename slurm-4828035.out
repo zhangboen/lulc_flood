@@ -1,0 +1,61 @@
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda deactivate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda deactivate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+['xgb_flood.py', '../data/Qmin7_final_dataset_seasonal4_multi_MSWX_meteo.csv', 'shap']
+(1512594, 131)
+ BDTICM elevation slope aridity sedimentary plutonic
+ volcanic metamorphic clay sand silt Porosity_x
+ logK_Ice_x ohdb_latitude ohdb_longitude year season_id freeze
+ climate basin_id lwd_3 p_3 pres_3 relhum_3
+ swd_3 spechum_3 tmax_3 tmin_3 wind_3 lwd_7
+ p_7 pres_7 relhum_7 swd_7 spechum_7 tmax_7
+ tmin_7 wind_7 lwd_15 p_15 pres_15 relhum_15
+ swd_15 spechum_15 tmax_15 tmin_15 wind_15 lwd_30
+ p_30 pres_30 relhum_30 swd_30 spechum_30 tmax_30
+ tmin_30 wind_30 p_365 runoff_ratio slope_fdc Q10_50
+ high_q_freq low_q_freq zero_q_freq cv high_q_dur low_q_dur
+ BFI lagT noResRatio FI p_mean stream_elas
+ hfd_mean tmax_ave tmax_std ImperviousSurface crop forest
+ grass water wetland res_darea_normalize Year_ave Main_Purpose_id
+
+<class 'shap._explanation.Explanation'>
+  0%|          | 0/10 [00:00<?, ?it/s] 10%|█         | 1/10 [01:36<14:28, 96.51s/it] 20%|██        | 2/10 [03:10<12:38, 94.77s/it] 30%|███       | 3/10 [04:43<10:59, 94.16s/it] 40%|████      | 4/10 [06:17<09:24, 94.06s/it] 50%|█████     | 5/10 [07:52<07:51, 94.36s/it] 60%|██████    | 6/10 [09:25<06:16, 94.03s/it] 70%|███████   | 7/10 [10:59<04:41, 93.86s/it] 80%|████████  | 8/10 [12:32<03:07, 93.82s/it] 90%|█████████ | 9/10 [14:06<01:33, 93.80s/it]100%|██████████| 10/10 [15:40<00:00, 93.75s/it]100%|██████████| 10/10 [15:40<00:00, 94.03s/it]
+
+real	17m48.809s
+user	7m57.319s
+sys	3m24.992s

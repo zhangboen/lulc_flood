@@ -6,67 +6,83 @@ import numpy as np
 import multiprocessing as mp
 from parallel_pandas import ParallelPandas
 from tqdm.auto import tqdm
-ParallelPandas.initialize(n_cpu=24, split_factor=24)
+ParallelPandas.initialize(n_cpu=16, split_factor=16)
 
+# # transform all the meteo files into separate csv files for each gauge
+# def read(year, meteo = 'MSWX'):
+#     if meteo == 'ERA5':
+#         fname = f'../ee_era5_land/ERA5_Land_daily_meteorology_for_OHDB_10717_stations_{year}.csv'
+#     elif meteo == 'MSWX':
+#         fname = f'../data_mswx/MSWX_daily_meteorology_for_OHDB_10717_stations_{year}.csv'
+#     df = pd.read_csv(fname).set_index('ohdb_id')
+#     print(year)
+#     return df
+# pool = mp.Pool(8)
+# df_meteo = pool.map(read, np.arange(1982, 2024).tolist())
+# df_meteo = pd.concat(df_meteo, axis = 1)
+# df_meteo = df_meteo.rename(columns=lambda x:x.lower())
+# df_meteo = df_meteo.round(6)
+# df_meteo.loc[:,df_meteo.columns.str.endswith(('_p','_tmax','_tmin','_wind'))] = df_meteo.loc[:,df_meteo.columns.str.endswith(('_p','_tmax','_tmin','_wind'))].round(2)
+# df_meteo = df_meteo.reset_index()
+
+# def func_main(x, meteo = 'MSWX'):
+#     ohdb_id = x.ohdb_id
+#     if os.path.exists(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv'):
+#         try:
+#             a = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv')
+#             return
+#         except:
+#             os.remove(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv')
+#     x = x.drop(index=['ohdb_id'])
+#     x.name = 'value'
+#     y = []
+#     for name in ['p','tmax','tmin','lwd','pres','relhum','spechum','swd','wind']:
+#         y0 = x.loc[x.index.str.endswith('_'+name)]
+#         y0.name = name
+#         y0.index = y0.index.str[:8]
+#         y.append(y0)
+#     y = pd.concat(y, axis = 1)
+#     # x = x.pivot_table(index = 'date', columns = 'meteo', values = 'value').rename(columns=lambda x:x.lower()).reset_index()
+#     # x['date'] = pd.to_datetime(x.date.values)
+#     # x.to_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv', index = False)
+#     y['date'] = pd.to_datetime(y.index.values, format = '%Y%m%d')
+#     y.to_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv', index = False)
+
+# df_meteo.p_apply(func_main, axis = 1)
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------
+# connect Qmin7 and Qmax7 records with meteo records
 # func to calculate averages in a parallel manner
-def func_meteo(x):
-    x['tmp'] = (x.date - x.Qdate).dt.days
-    x3 = x.loc[(x.tmp>-3)&(x.tmp<=0),:].drop(columns=['date','Qdate','ohdb_id','tmp']).mean().rename(index=lambda x:x+'_3')
-    x7 = x.loc[(x.tmp>-7)&(x.tmp<=0),:].drop(columns=['date','Qdate','ohdb_id','tmp']).mean().rename(index=lambda x:x+'_7')
-    x15 = x.loc[(x.tmp>-15)&(x.tmp<=0),:].drop(columns=['date','Qdate','ohdb_id','tmp']).mean().rename(index=lambda x:x+'_15')
-    x30 = x.loc[(x.tmp>-30)&(x.tmp<=0),:].drop(columns=['date','Qdate','ohdb_id','tmp']).mean().rename(index=lambda x:x+'_30')
-    x = pd.concat([x3,x7,x15,x30])
+def func_meteo(x, name = 'Qmax7date'):
+    ohdb_id = x.xxx.values[0]
+    x = x.drop(columns=['xxx'])
+    df_meteo = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv')
+    df_meteo['date'] = pd.to_datetime(df_meteo['date'])
+    df_meteo['ohdb_id'] = ohdb_id
+    x = x[['ohdb_id',name]].merge(df_meteo,on = 'ohdb_id')
+    x['tmp'] = (x.date - x[name]).dt.days
+    x3 = x.loc[(x.tmp>-3)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_3')
+    x7 = x.loc[(x.tmp>-7)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_7')
+    x15 = x.loc[(x.tmp>-15)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_15')
+    x30 = x.loc[(x.tmp>-30)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_30')
+    x365 = x.loc[(x.tmp>-365)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_365')
+    x = pd.concat([x3,x7,x15,x30,x365], axis = 1).reset_index()
     return x
 
-df_flood = pd.read_csv('../data/dis_OHDB_seasonal4_Qmin7_Qmax7_1982-2023.csv')
+fname = '../data/dis_OHDB_seasonal_Qmin7_Qmax7_1982-2023.csv'
+df_flood = pd.read_csv(fname)
 df_flood['Qmax7date'] = pd.to_datetime(df_flood['Qmax7date'])
 df_flood['Qmin7date'] = pd.to_datetime(df_flood['Qmin7date'])
 
-meteo = 'MSWX'
-for year in range(1982, 2024):
-    if meteo == 'ERA5':
-        fname = f'../ee_era5_land/ERA5_Land_daily_meteorology_for_OHDB_10717_stations_{year}.csv'
-    elif meteo == 'MSWX':
-        fname = f'../data_mswx/MSWX_daily_meteorology_for_OHDB_10717_stations_{year}.csv'
-    df = pd.read_csv(fname)
-    df = df.melt(id_vars = 'ohdb_id')
-    df['date'] = df.variable.apply(lambda x:x[:4]+'-'+x[4:6]+'-'+x[6:8])
-    df['meteo'] = df.variable.str[9:]
-    df = df.drop(columns=['variable'])
-    df = df.pivot_table(index = ['ohdb_id','date'], columns = 'meteo', values = 'value').reset_index()
-    df['date'] = pd.to_datetime(df.date.values)
+df_flood['xxx'] = df_flood['ohdb_id'].values
 
-    if meteo == 'ERA5':
-        # change meteo unit
-        df[['snow_depth_water_equivalent','snowmelt_sum','total_evaporation_sum','total_precipitation_sum']] = df[['snow_depth_water_equivalent','snowmelt_sum','total_evaporation_sum','total_precipitation_sum']] * 1000
-        df[['snow_depth_water_equivalent','snowmelt_sum','total_evaporation_sum','total_precipitation_sum']] = df[['snow_depth_water_equivalent','snowmelt_sum','total_evaporation_sum','total_precipitation_sum']].round(3)
-        df[['temperature_2m_min','temperature_2m_max']] = df[['temperature_2m_min','temperature_2m_max']] - 273.15
-        df[['temperature_2m_min','temperature_2m_max']] = df[['temperature_2m_min','temperature_2m_max']].round(3)
-        df['surface_net_solar_radiation_sum'] = df['surface_net_solar_radiation_sum'] * 1e-6
-        df['surface_net_solar_radiation_sum'] = df['surface_net_solar_radiation_sum'].round(3)
-        # change meteo name
-        df = df.rename(columns = {
-            'snow_depth_water_equivalent':'swe',
-            'snowmelt_sum':'swmelt',
-            'total_evaporation_sum':'evap',
-            'total_precipitation_sum':'pr',
-            'temperature_2m_min':'t2min',
-            'temperature_2m_max':'t2max',
-            'surface_net_solar_radiation_sum':'srad'
-        })
-    elif meteo == 'MSWX':
-        df = df.rename(columns = lambda x:x.lower())
+tmp = os.path.basename(fname).split('_')[2]
 
-    df_flood0 = df_flood.loc[df_flood.year==year,:]
+df2 = df_flood.groupby('ohdb_id').p_apply(lambda x: func_meteo(x, name = 'Qmax7date')).reset_index().drop(columns = ['level_1'])
+print(df2.shape)
+df2.to_csv(f'../data/Qmax7_{tmp}_multi_MSWX_meteo.csv', index = False)
+del df2
 
-    df_Qmax7 = df.merge(df_flood0[['ohdb_id','Qmax7date']].rename(columns={'Qmax7date':'Qdate'}), on = 'ohdb_id')
-    print(df_Qmax7.shape)
-    df_Qmax7 = df_Qmax7.groupby('ohdb_id').p_apply(func_meteo).reset_index().assign(year=year)
-    df_Qmax7 = df_Qmax7.merge(df_flood0[['ohdb_id','Qmax7','Qmax7date']], on = 'ohdb_id')
-    df_Qmax7.to_csv(f'../data/Qmax7_seasonal4_MSWX_meteo_multi_{year}.csv', index = False)
-
-    df_Qmin7 = df.merge(df_flood0[['ohdb_id','Qmin7date']].rename(columns={'Qmin7date':'Qdate'}), on = 'ohdb_id')
-    print(df_Qmin7.shape)
-    df_Qmin7 = df_Qmin7.groupby('ohdb_id').p_apply(func_meteo).reset_index().assign(year=year)
-    df_Qmin7 = df_Qmin7.merge(df_flood0[['ohdb_id','Qmin7','Qmin7date']], on = 'ohdb_id')
-    df_Qmin7.to_csv(f'../data/Qmin7_seasonal4_MSWX_meteo_multi_{year}.csv', index = False)
+df2 = df_flood.groupby('ohdb_id').p_apply(lambda x: func_meteo(x, name = 'Qmin7date')).reset_index().drop(columns = ['level_1'])
+print(df2.shape)
+df2.to_csv(f'../data/Qmin7_{tmp}_multi_MSWX_meteo.csv', index = False)
