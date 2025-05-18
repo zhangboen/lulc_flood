@@ -257,6 +257,9 @@ if __name__ == '__main__':
     print('Finish subseting catches', catch.shape)
     del tmp1
 
+    # parallel setting
+    ParallelPandas.initialize(n_cpu=12, split_factor=2)
+
     # get unique OHDB IDs to be processed
     ohdb_ids = tmp.ohdb_id.unique()
     
