@@ -1,0 +1,17 @@
+processing  ['get_basin_boundary.py', 'NA']
+Finish subseting reaches (2556279, 2)
+Finish subseting catches (2938947, 5)
+do
+Traceback (most recent call last):
+  File "/data/ouce-drift/cenv1021/attribution_test/lulc_flood/get_basin_boundary.py", line 276, in <module>
+    disolve(ohdb_id)
+NameError: name 'disolve' is not defined
+Exception ignored in: <function Pool.__del__ at 0x14bfa4f8a310>
+Traceback (most recent call last):
+  File "/apps/system/easybuild/software/Anaconda3/2022.05/lib/python3.9/multiprocessing/pool.py", line 268, in __del__
+  File "/apps/system/easybuild/software/Anaconda3/2022.05/lib/python3.9/multiprocessing/queues.py", line 372, in put
+AttributeError: 'NoneType' object has no attribute 'dumps'
+
+real	34m29.276s
+user	213m8.245s
+sys	6m23.256s

@@ -24,7 +24,6 @@ print(shpName)
 if(file.exists(outName)&(file.info(outName)$size>0)) quit(save="no")
 
 poly0 <- st_read(shpName)
-poly0 <- st_transform(poly0, crs = 4326)
 
 ## Extract data
 fnames = list.files(path = paste('../../data/MSWX/',varName,'Daily',sep = '/'), 
@@ -32,6 +31,7 @@ fnames = list.files(path = paste('../../data/MSWX/',varName,'Daily',sep = '/'),
                     full.name = T)
 func <- function(fname) {
     data <- terra::rast(fname)
+    data <- project(data, 'EPSG:8857')
     if (method != 'ratio') {
         res <- exact_extract(data, poly0, fun = method)
     } else {

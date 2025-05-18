@@ -102,7 +102,7 @@ def step_dissolve_polygon(gdf0):
     return polygon
 
 def dissolve(ohdb_id):
-    if os.path.exists(f'../data/GRIT/full_catchment/GRIT_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg'):
+    if os.path.exists(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg'):
         print(ohdb_id, 'already has')
         return
     tmp0 = tmp.loc[tmp.ohdb_id==ohdb_id,:].reset_index()
@@ -196,21 +196,22 @@ def dissolve(ohdb_id):
     unique_catch_ids['ohdb_darea'] = ohdb_darea
     out0 = unique_catch_ids.iloc[[idx],:]
     out0 = gpd.GeoDataFrame(data = out0, geometry = np.array([geometries[idx]]), crs = 'epsg:8857')
-    write_dataframe(out0, f'../data/GRIT/full_catchment/GRIT_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg')
+    write_dataframe(out0, f'../data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg')
     print(ohdb_id, 'yes', grit_darea[idx], ohdb_darea)
 
 # get global_id of all reaches
 if __name__ == '__main__':
-    gdf_sta = read_dataframe('../data/OHDB/OHDB_v0.2.3/OHDB_metadata_fill_hydrosheds_fcc.gpkg')
+    gdf_sta = read_dataframe('/data/ouce-drift/cenv1021/data/OHDB/OHDB_v0.2.3/OHDB_metadata_fill_hydrosheds_fcc.gpkg')
 
     # remove stations that have been already processed
-    fnames = glob.glob(f'../data/GRIT/full_catchment/GRIT_full_catchment_EPSG8857_{domain}_OHDB*.gpkg')
+    fnames = glob.glob(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_OHDB*.gpkg')
     ohdb_ids = [re.search(r'OHDB_\d+',a).group(0) for a in fnames]
     gdf_sta = gdf_sta.loc[(~gdf_sta.ohdb_id.isin(ohdb_ids))&(gdf_sta.domain==domain),:]
     if gdf_sta.shape[0] == 0:
         sys.exit('All stations have been processed')
 
-    fname = f'../data/GRIT/segments/GRITv05_reaches_{domain}_EPSG8857.gpkg'
+    # read GRIT reach
+    fname = f'/data/ouce-evoflood/results/global_river_topology/output_v06/reach_attributes/GRITv06_reaches_{domain}_EPSG8857.gpkg'
     reach = read_dataframe(fname, layer = 'lines')
     reach['global_id'] = reach['global_id'].astype(np.int64)
     
@@ -238,8 +239,8 @@ if __name__ == '__main__':
     reach['geometry'] = reach.simplify(10)
     print('Finish subseting reaches', reach.shape)
 
-    # subset catchment
-    catch = read_dataframe('../data/GRIT/catchment_domain/GRITv05_segment_catchments_%s_EPSG8857.gpkg'%domain)
+    # read and subset catchment to reduce the risk of out-of-memory error
+    catch = read_dataframe(f'/data/ouce-evoflood/results/global_river_topology/output_v06/catchments/GRITv06_reach_catchments_{domain}_EPSG8857.gpkg')
     catch['global_id'] = catch['global_id'].astype(np.int64)
     catch['geometry1'] = catch.geometry.values
     catch['geometry'] = catch.centroid
@@ -256,8 +257,7 @@ if __name__ == '__main__':
     print('Finish subseting catches', catch.shape)
     del tmp1
 
-    # parallel dissolve
-    ParallelPandas.initialize(n_cpu=12, split_factor=2)
+    # get unique OHDB IDs to be processed
     ohdb_ids = tmp.ohdb_id.unique()
     
     try:
@@ -268,7 +268,9 @@ if __name__ == '__main__':
     except:
         print('do')
         
-    number = len(ohdb_ids)
-    for i,ohdb_id in enumerate(ohdb_ids):
-        print(f'There are {number-i} stations to be processed')
-        dissolve(ohdb_id)
+    # number = len(ohdb_ids)
+    # for i,ohdb_id in enumerate(ohdb_ids):
+    #     print(f'There are {number-i} stations to be processed')
+    #     dissolve(ohdb_id)
+    ohdb_id = 'OHDB_014022469'
+    dissolve(ohdb_id)

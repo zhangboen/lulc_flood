@@ -48,7 +48,7 @@ def add_histogram(ax, vals, extent, vmin, vmax, vind, cmap):
     ax2.spines['right'].set_visible(False)
     ax2.axvline(x=vcenter,color='k')
 
-def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, size = 1, fontSize = 9, norm = None):
+def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, size = 1, fontSize = 9, norm = None, addHist = True):
     ax.set_global()
     ax.set_ylim([-6525154.6651, 8625154.6651]) 
     ax.set_xlim([-12662826, 15924484]) 
@@ -58,19 +58,15 @@ def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, size = 
     # plot scatter setting
     if norm is None:
         norm = mpl.colors.Normalize(vmin = vmin, vmax = vmax)
-    # add colorbar
     ras = ax.scatter(lons, lats, c = vals, norm = norm, cmap = cmap, s = size, transform = ccrs.PlateCarree(), zorder = 3, linewidths = 0)
-    ax2 = ax.inset_axes([.35, .03, 0.25, .03])
-    plt.colorbar(ras, cax = ax2, orientation = 'horizontal', extend = 'both')
-    ax2.tick_params(labelsize = fontSize)
-    ax2.set_title(label, size = fontSize, pad = 2)
     # add histograms
-    add_histogram(ax, vals, [.62, .2, .15, .2], vmin, vmax, vind, cmap)
+    if addHist:
+        add_histogram(ax, vals, [.62, .25, .15, .2], vmin, vmax, vind, cmap)
     # set plot title
     ax.set_title(title, size = fontSize, pad = 7)
-    return ax
+    return ax, ras
 
-def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, normColor = 'log', addDiagnol = True, palette = None, ax = None, legend = True, fontsize = 10):
+def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, normColor = 'log', addDiagnol = True, palette = None, ax = None, legend = True, fontsize = 10, size = 1):
     df0 = pd.DataFrame({'x':x, 'y':y,'climate':climate})
     if ax is None:
         fig, ax1 = plt.subplots(figsize=(4, 4))
@@ -78,9 +74,9 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
         ax1 = ax
     # y vs y_pred
     if normColor == 'log':
-        g = sns.scatterplot(data = df0, x = 'x', y = 'y', hue = 'climate', ax = ax1, hue_norm = LogNorm(), alpha = .6, palette = palette, legend = legend)
+        g = sns.scatterplot(data = df0, x = 'x', y = 'y', hue = 'climate', ax = ax1, hue_norm = LogNorm(), alpha = .6, palette = palette, legend = legend, s = size)
     else:
-        g = sns.scatterplot(data = df0, x = 'x', y = 'y', hue = 'climate', ax = ax1, alpha = .6, palette = palette, legend = legend)
+        g = sns.scatterplot(data = df0, x = 'x', y = 'y', hue = 'climate', ax = ax1, alpha = .6, palette = palette, legend = legend, s = size)
     if legend:
         g.legend_.set_title(None)
         sns.move_legend(ax1, "lower right")
@@ -111,7 +107,7 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
         nse0 = np.round(nse0, 2)
         nRMSE = int(nRMSE)
         ax1.text(.95, .05, 
-                'NSE = {:1.2f}\nnRMSE = {:1.0f}%\nKGE = {:1.2f}\nr = {:1.2f}\nβ = {:1.2f}\nα = {:1.2f}'.format(nse0, nRMSE, kge, r, beta, alpha),
+                'r = {:1.2f}\nβ = {:1.2f}\nα = {:1.2f}\nNSE = {:1.2f}\nKGE = {:1.2f}\nnRMSE = {:1.0f}%'.format(r, beta, alpha, nse0, kge, nRMSE),
                 linespacing = 1.5, 
                 transform=ax1.transAxes, 
                 size = fontsize, 

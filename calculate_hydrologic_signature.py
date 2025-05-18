@@ -23,8 +23,8 @@ def del_unreliableQ(df):
     df['date'] = pd.to_datetime(df['date'])
     df = df.sort_values('date').set_index('date')
     index = pd.date_range(df.index[0], df.index[-1], freq = 'D')
-    df = df.reindex(index).fillna(0)
-    df1 = df.diff()
+    df = df.reindex(index)
+    df1 = df.fillna(0).diff()
     df1 = df1.where(df1==0, 1).diff()
     start = np.where(df1.values==-1)[0]
     end = np.where(df1.values==1)[0]
@@ -47,24 +47,99 @@ def del_unreliableQ(df):
     df = df.loc[df.Q>=0,:]
     return (df)
 
-def Eckhardt(Q, alpha=.98, BFI=.80, re=1):
+def del_outlierQ(df):
+    '''
+        Based on a previously suggested approach for evaluating temperature series (Klein Tank et al., 2009), 
+        daily streamflow values are declared as outliers if values of log (Q+0.01) are larger or smaller than 
+        the mean value of log (Q+0.01) plus or minus 6 times the standard deviation of log (Q+0.01) computed for 
+        that calendar day for the entire length of the series. The mean and standard deviation are computed for 
+        a 5-day window centred on the calendar day to ensure that a sufficient amount of data is considered. 
+        The log-transformation is used to account for the skewness of the distribution of daily streamflow values 
+        and 0.01 was added because the logarithm of zero is undefined. Outliers are flagged as suspect. 
+        The rationale underlying this rule is that unusually large or small values are often associated with observational issues. 
+        The 6 standard-deviation threshold is a compromise, aiming at screening out outliers that could come from 
+        instrument malfunction, while not flagging extreme floods or low flows.
+    '''
+    df['logQ'] = np.log(df['Q']+0.01)
+    df['doy'] = df.index.dayofyear
+    df['year'] = df.index.year
+    df = df.pivot_table(index = 'doy', columns = 'year', values = 'logQ').reset_index()
+    def tmp(x0):
+        x = np.arange(x0-2, x0+3) 
+        x = np.where(x <= 0, x + 366, x)
+        x = np.where(x > 366, x - 366, x)
+        s = df.loc[df.doy.isin(x),:].drop(columns=['doy']).values.flatten()
+        ave = np.nanmean(s)
+        std = np.nanstd(s)
+        low = ave - std * 6
+        upp = ave + std * 6
+        return (x0, low, upp)
+    thres = list(map(tmp, np.arange(1, 367)))
+    thres = pd.DataFrame(data = np.array(thres), columns = ['doy','low','upp'])
+    df = df.merge(thres, on = 'doy').set_index('doy')
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].lt(df['upp'], axis=0))
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].gt(df['low'], axis=0))
+    df = df.drop(columns = ['low','upp']).stack().reset_index(name='logQ')
+    df['Q'] = np.exp(df['logQ']) - 0.01
+    df['Q'] = np.where(df['Q'].abs()<1e-6, 0, df['Q'])
+    df['date'] = pd.to_datetime(df['level_1'].astype(str) + '-' + df['doy'].astype(str), format='%Y-%j')
+    df = df[['date','Q']].sort_values('date').set_index('date')
+    return df
+
+def Eckhardt(Q, alpha=.98, BFI=.80, re=1, warm = 30):
     """
     Recursive digital filter for baseflow separation. Based on Eckhardt, 2004.\n
     Q : array of discharge measurements\n
     alpha : filter parameter\n
     BFI : BFI_max (maximum baseflow index)\n
     re : number of times to run filter
+    
+    split Q time series into consecutive segments without NaN and the length of segments should be greater than 'warm'
+    Baseflow index would be calculated for each segment
+    and the baseflow timeseries only outside of the warm period will be considered
+    
     """
     Q = np.array(Q)
-    f = np.zeros(len(Q))
-    f[0] = Q[0]
-    for t in np.arange(1,len(Q)):
-        # algorithm
-        f[t] = ((1 - BFI) * alpha * f[t-1] + (1 - alpha) * BFI * Q[t]) / (1 - alpha * BFI)
-        if f[t] > Q[t]:
-            f[t] = Q[t]
+    
+    # split Q into consecutive segments without NaN
+    diff0 = np.where(np.isnan(Q), 0, 1)
+    if not np.isnan(Q).any():
+        start = [0]
+        end = [None]
+    else:
+        start = (np.where(np.diff(diff0) == 1)[0] + 1).tolist()
+        end = np.where(np.diff(diff0) == -1)[0].tolist()
+        if start[0] > end[0]:
+            start = [0] + start
+        if end[-1] < start[-1]:
+            end = end + [None]
+    
+    baseflow = []
+    streamflow = []
+    for start0,end0 in zip(start, end):
+        if start0 is None:
+            num = end0
+        elif end0 is None:
+            num = len(Q) - start0
+        else:
+            num = end0 - start0
+        if num < warm:
+            continue
+        Q0 = Q[start0:end0]
+        f = np.zeros(len(Q0))
+        flag = np.zeros(len(Q0))
+        f[0] = Q0[0]
+        for t in np.arange(1,len(Q0)):
+            # algorithm
+            f[t] = ((1 - BFI) * alpha * f[t-1] + (1 - alpha) * BFI * Q0[t]) / (1 - alpha * BFI)
+            if f[t] > Q0[t]:
+                f[t] = Q0[t]
+        baseflow.append(f[warm:])
+        streamflow.append(Q0[warm:])
+    if len(baseflow) == 0 or len(streamflow) == 0:
+        return np.nan
     # calls method again if multiple passes are specified
-    return np.nansum(f)/np.nansum(Q)
+    return np.sum(np.concatenate(baseflow)) / np.sum(np.concatenate(streamflow))
 
 # Function to identify and delete the smaller sample within 5 days
 def delete_smaller_sample(df):
@@ -120,7 +195,7 @@ def calc_hs(df):
         raise Exception ('the input df misses columns: date, pr, dis, and darea') 
 
     # transform streamflow to specific discharge
-    df['dis'] = df.dis.values / df.darea.values
+    df['dis'] = df.dis.values / df.darea.values * 86.4
     lat = df.lat.values[0]
     df = df.drop(columns=['darea','lat']).set_index('date')
 
@@ -156,9 +231,9 @@ def calc_hs(df):
         # ratio of Q10 to Q50 to indicate groundwater
         Q.loc[0.1] / Q.loc[0.5],
         # frequency of high flows, low flows, and zero flows
-        (df['dis']>Q.loc[0.5]*9).sum(),
-        (df['dis']<Q.loc[0.5]*.2).sum(),
-        (df['dis']==0).sum(),
+        df.resample('YE').dis.agg(lambda x:x.loc[x>Q.loc[0.5]*9].shape[0]).mean(),
+        df.resample('YE').dis.agg(lambda x:x.loc[x<Q.loc[0.5]*.2].shape[0]).mean(),
+        df.resample('YE').dis.agg(lambda x:x.loc[x==0].shape[0]).mean(),
         # variability coefficient
         df['dis'].std() / df['dis'].mean(),
         # event duration
@@ -247,7 +322,11 @@ def main(ohdb_id):
     # read
     df_dis = cleanQ(df_dis)
     # quality check
-    df_dis = del_unreliableQ(df_dis).reset_index().rename(columns={'index':'date'})
+    df_dis = del_unreliableQ(df_dis)
+    # delete outliers
+    df_dis = del_outlierQ(df_dis)
+    
+    df_dis = df_dis.reset_index().rename(columns={'index':'date'})
     df = df_pr0.merge(df_dis, on = 'date')
     df = df.sort_values('date',ascending=True).rename(columns={'Q':'dis'})
     df['darea'] = df_attr.loc[df_attr.ohdb_id==ohdb_id,'gritDarea'].values[0]
@@ -258,8 +337,9 @@ def main(ohdb_id):
     return (HS)
 
 if __name__ == '__main__':
-    pool = mp.Pool(12)
+    pool = mp.Pool(16)
     HS = pool.map(main, df_attr.ohdb_id.values)
     HS = pd.concat(HS, axis = 1)
     HS = HS.T.reset_index()
+    HS = HS.dropna()
     HS.to_csv('../data/hydrologic_signatures.csv', index = False)

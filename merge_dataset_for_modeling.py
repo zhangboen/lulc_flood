@@ -4,16 +4,16 @@ import pandas as pd
 import xarray as xr
 
 target = sys.argv[1]
-if target not in ['Qmax7','Qmin7']:
-    raise Exception('target must be Qmax7 or Qmin7')
+if target not in ['Qmax7','Qmin7','Qmax']:
+    raise Exception('target must be Qmax7 or Qmin7 or Qmax')
 
 ###################################################################
 # read meteo dataset
-fname = f'../data/{target}_seasonal_multi_MSWX_meteo.csv'
+fname = f'../data/{target}_seasonal4_multi_MSWX_MSWEP_GLEAM.csv'
 df_meteo = pd.read_csv(fname)
 
 # merge with discharge
-df_dis = pd.read_csv('../data/dis_OHDB_seasonal_Qmin7_Qmax7_1982-2023.csv')
+df_dis = pd.read_csv('../data/dis_OHDB_seasonal4_Qmin7_Qmax7_1982-2023.csv')
 
 df_meteo[target+'date'] = pd.to_datetime(df_meteo[target+'date'])
 df_dis[target+'date'] = pd.to_datetime(df_dis[target+'date'])
@@ -83,11 +83,44 @@ df['Year_ave'] = df['Year_ave'].fillna(2024)
 df['Main_Purpose'] = df['Main_Purpose'].fillna('NoRes').str.lower()
 df.loc[df.Main_Purpose.str.contains('not specified'),'Main_Purpose'] = 'other'
 
+df['climate_label'] = df.climate.map({1:'tropical',2:'dry',3:'temperate',4:'cold',5:'polar'})
+
+# create label-encoding variable for gauge id
+x = pd.DataFrame({'ohdb_id':df.ohdb_id.unique(),'gauge_id':np.arange(1, df.ohdb_id.unique().shape[0]+1)})
+df = df.merge(x, on = 'ohdb_id')
+
+# create label-encoding variable for basin id
+x = pd.DataFrame({'HYBAS_ID':df.HYBAS_ID.unique(),'basin_id':np.arange(df.HYBAS_ID.unique().shape[0])})
+df = df.merge(x, on = 'HYBAS_ID')
+
+# create label-encoding variable for dam purpose
+x = pd.DataFrame({'Main_Purpose':df.Main_Purpose.unique(),'Main_Purpose_id':np.arange(df.Main_Purpose.unique().shape[0])})
+df = df.merge(x, on = 'Main_Purpose')
+
+# create label-encoding variable for season 
+x = pd.DataFrame({'season':df.season.unique(),'season_id':np.arange(df.season.unique().shape[0])})
+df = df.merge(x, on = 'season').reset_index(drop=True)
+df.year = df.year.astype(np.float32)
+
+print(df.ohdb_id.unique().shape)
+
+# # add GDP
+# df_GDP = pd.read_csv('../data_gdp/GDP_1km_catch_ave_1982-2023_linear_interp.csv')
+# df = df.merge(df_GDP, on = ['ohdb_id', 'year'])
+
+# # add population
+# df_pop = pd.read_csv('../data_population/GHS_population_catch_ave_1982-2023_cubic_interp.csv')
+# df_pop = df_pop.melt(id_vars = 'ohdb_id', var_name = 'year', value_name = 'population')
+# df_pop.loc[df_pop.population<1e-3,'population'] = 0
+# df_pop['year'] = df_pop['year'].astype(int)
+# df = df.merge(df_pop, on = ['ohdb_id','year'])
+# print(df.ohdb_id.unique().shape)
+
 # round small values to 0.001
-df.loc[(df.Q>0)&(df.Q<0.001),'Q'] = 0.001
+df.loc[(df.Q>0)&(df.Q<0.001),'Q'] = 0
 
 if 'seasonal4' in fname:
-    df.to_csv(f'../data/{target}_final_dataset_seasonal4_multi_MSWX_meteo.csv', index = False)
+    df.to_csv(f'../data/{target}_final_dataset_seasonal4_multi_MSWX_meteo_MSWEP_GLEAM.csv', index = False)
 else:
-    df.to_csv(f'../data/{target}_final_dataset_seasonal_multi_MSWX_meteo.csv', index = False)
+    df.to_csv(f'../data/{target}_final_dataset_seasonal_multi_MSWX_meteo_MSWEP_GLEAM.csv', index = False)
 print(df.shape)

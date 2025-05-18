@@ -52,6 +52,45 @@ def del_unreliableQ(df):
     df = df.loc[df.Q>=0,:]
     return (df)
 
+def del_outlierQ(df):
+    '''
+        Based on a previously suggested approach for evaluating temperature series (Klein Tank et al., 2009), 
+        daily streamflow values are declared as outliers if values of log (Q+0.01) are larger or smaller than 
+        the mean value of log (Q+0.01) plus or minus 6 times the standard deviation of log (Q+0.01) computed for 
+        that calendar day for the entire length of the series. The mean and standard deviation are computed for 
+        a 5-day window centred on the calendar day to ensure that a sufficient amount of data is considered. 
+        The log-transformation is used to account for the skewness of the distribution of daily streamflow values 
+        and 0.01 was added because the logarithm of zero is undefined. Outliers are flagged as suspect. 
+        The rationale underlying this rule is that unusually large or small values are often associated with observational issues. 
+        The 6 standard-deviation threshold is a compromise, aiming at screening out outliers that could come from 
+        instrument malfunction, while not flagging extreme floods or low flows.
+    '''
+    df['logQ'] = np.log(df['Q']+0.01)
+    df['doy'] = df.index.dayofyear
+    df['year'] = df.index.year
+    df = df.pivot_table(index = 'doy', columns = 'year', values = 'logQ').reset_index()
+    def tmp(x0):
+        x = np.arange(x0-2, x0+3) 
+        x = np.where(x <= 0, x + 366, x)
+        x = np.where(x > 366, x - 366, x)
+        s = df.loc[df.doy.isin(x),:].drop(columns=['doy']).values.flatten()
+        ave = np.nanmean(s)
+        std = np.nanstd(s)
+        low = ave - std * 6
+        upp = ave + std * 6
+        return (x0, low, upp)
+    thres = list(map(tmp, np.arange(1, 367)))
+    thres = pd.DataFrame(data = np.array(thres), columns = ['doy','low','upp'])
+    df = df.merge(thres, on = 'doy').set_index('doy')
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].lt(df['upp'], axis=0))
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].gt(df['low'], axis=0))
+    df = df.drop(columns = ['low','upp']).stack().reset_index(name='logQ')
+    df['Q'] = np.exp(df['logQ']) - 0.01
+    df['Q'] = np.where(df['Q'].abs()<1e-6, 0, df['Q'])
+    df['date'] = pd.to_datetime(df['level_1'].astype(str) + '-' + df['doy'].astype(str), format='%Y-%j')
+    df = df[['date','Q']].sort_values('date').set_index('date')
+    return df
+
 def get_peaks(df, Darea):
     Q = df.Q.values
     peak_idx, _ = find_peaks(Q)
@@ -110,6 +149,8 @@ def main(par):
     df = cleanQ(df)
     # quality check
     df = del_unreliableQ(df)
+    # delete outliers
+    df = del_outlierQ(df)
     # only retain records with at least 328 observations (90%) are required
     tmp = df.resample('Y')['Q'].agg(countDay = lambda x:x.shape[0])
     if tmp.loc[tmp.countDay>=300,:].shape[0] == 0:
@@ -124,9 +165,9 @@ def main(par):
     newidx = pd.date_range(df.index.values[0], df.index.values[-1], freq = 'D')
     df = df.reindex(newidx)
 
-    # 7-day moving average
-    df = df.rolling(7).mean().dropna()
-    df['year'] = df.index.year
+    # # 7-day moving average
+    # df = df.rolling(7).mean().dropna()
+    # df['year'] = df.index.year
 
     # # Type 1: calculate Qmax7 and Qmin7 for each year
     # df1 = df.groupby('year')['Q'].agg(countDay = lambda x:x.shape[0], 
@@ -149,12 +190,12 @@ def main(par):
     # Type 3: use scipy find_peaks
     peaks = get_peaks(df, Darea)
     df_Qmax = df.iloc[peaks,:].reset_index(names='date')
-    df_Qmax['type'] = 'Qmax7'
-    valleys = get_valleys(df, ohdb_id)
-    df_Qmin = df.iloc[valleys,:].reset_index(names='date')
-    df_Qmin['type'] = 'Qmin7'
-    df1 = pd.concat([df_Qmax, df_Qmin])
-
+    df_Qmax['type'] = 'Qmax'
+    # valleys = get_valleys(df, ohdb_id)
+    # df_Qmin = df.iloc[valleys,:].reset_index(names='date')
+    # df_Qmin['type'] = 'Qmin7'
+    # df1 = pd.concat([df_Qmax, df_Qmin])
+    df1 = df_Qmax.copy()
     df1['ohdb_id'] = ohdb_id
     return (df1)
 
@@ -177,7 +218,7 @@ if __name__ == '__main__':
     pars = df1[['ohdb_id','gritDarea']].values.tolist()
     df = pool.map(main, pars)
     df = pd.concat(df)
-    df.to_csv('../data/dis_OHDB_local_Qmin7_Qmax7_1982-2023.csv', index = False)
+    df.to_csv('../data/dis_OHDB_local_Qmax_1982-2023.csv', index = False)
 # X = df.loc[df.type=='Qmax7',:].groupby('ohdb_id')['Q'].count()
 # Y = df.loc[df.type=='Qmin7',:].groupby('ohdb_id')['Q'].count()
 # print(X.loc[X>36].shape)

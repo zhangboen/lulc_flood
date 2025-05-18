@@ -1,4 +1,4 @@
-# module load UDUNITS; module load GDAL; module load R/4.3.2-gfbf-2023a
+# module load UDUNITS; module load GDAL/3.7.1-foss-2023a-spatialite; module load R/4.3.2-gfbf-2023a
 # Rscript --no-restore --no-save calc_GRIT_catch_ave_MSWEP_1.r prName, shpName
 library(conflicted)
 library(sf)
@@ -20,9 +20,9 @@ print(shpName)
 if(file.exists(outName)&(file.info(outName)$size>0)) quit(save="no")
 
 data <- terra::rast(prName)
+data <- terra::project(data, 'EPSG:8857', threads = TRUE)
 
 poly0 <- st_read(shpName)
-poly0 <- st_transform(poly0, crs = 4326)
 
 ## Extract data
 if (method != 'ratio') {
@@ -51,10 +51,6 @@ df['variable'] <- rownames(df)
 times <- tibble(variable = names(data), time = time(data))
 df <- df %>%
   left_join(times, by = "variable")
-
-## Remove index from variable name
-df <- subset(df, select = -c(variable))
-df[is.na(df)] <- 0
 
 # save to parquet
 write_csv(df, outName)
