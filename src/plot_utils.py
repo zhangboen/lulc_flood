@@ -6,10 +6,12 @@ import hydroeval as he
 import matplotlib.ticker as ticker
 import scienceplots
 import cartopy
+from scipy.stats import pearsonr
+from matplotlib.lines import Line2D
 import warnings
 import seaborn as sns
 from matplotlib.colors import LogNorm, Normalize
-import os,glob,re,sys
+import os,glob,re,sys,cmaps,string
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import multiprocessing as mp
@@ -18,13 +20,19 @@ import cartopy.feature as cf
 from matplotlib.collections import LineCollection
 import matplotlib.font_manager as font_manager
 warnings.filterwarnings("ignore")
-
-# set custom font (not a good idea)
 font_manager.fontManager.addfont(os.environ['DATA']+'/fonts/Helvetica/Helvetica.ttf')
 font_manager.fontManager.addfont(os.environ['DATA']+'/fonts/Helvetica/Helvetica-Bold.ttf')
-
 plt.style.use(['science','nature','no-latex']) # require install SciencePlots
 plt.rcParams.update({"font.size":12, 'font.family':'Helvetica'}) 
+from parallel_pandas import ParallelPandas
+ParallelPandas.initialize(n_cpu=24, split_factor=12)
+
+palette = {'tropical':'#F8D347',
+           'dry':'#C7B18A',
+           'temperate':"#65C2A5",
+           'cold':"#a692b0",
+           'polar':"#B3B3B3"
+          }
 
 def add_histogram(ax, vals, extent, vmin, vmax, vind, cmap):
     ax2 = ax.inset_axes(extent)
@@ -48,7 +56,7 @@ def add_histogram(ax, vals, extent, vmin, vmax, vind, cmap):
     ax2.spines['right'].set_visible(False)
     ax2.axvline(x=vcenter,color='k')
 
-def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, size = 1, fontSize = 9, norm = None, addHist = True):
+def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, marker = "$\circ$", size = 1, fontSize = 9, norm = None, addHist = True):
     ax.set_global()
     ax.set_ylim([-6525154.6651, 8625154.6651]) 
     ax.set_xlim([-12662826, 15924484]) 
@@ -58,7 +66,8 @@ def plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, size = 
     # plot scatter setting
     if norm is None:
         norm = mpl.colors.Normalize(vmin = vmin, vmax = vmax)
-    ras = ax.scatter(lons, lats, c = vals, norm = norm, cmap = cmap, s = size, transform = ccrs.PlateCarree(), zorder = 3, linewidths = 0)
+    ras = ax.scatter(lons, lats, c = vals, norm = norm, cmap = cmap, s = size, marker = marker, 
+                    ec = "face", transform = ccrs.PlateCarree(), zorder = 3, linewidths = 0)
     # add histograms
     if addHist:
         add_histogram(ax, vals, [.62, .25, .15, .2], vmin, vmax, vind, cmap)
@@ -99,15 +108,14 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
     if metrics:
         kge, r, beta, alpha = he.evaluator(he.kge, y, x).squeeze()
         nse0 = he.evaluator(he.nse, y, x)[0]
-        nRMSE = np.sum((y-x)**2) / np.sum(x**2) * 100
+        nRMSE = np.sqrt(np.mean((y-x)**2)) / (np.max(x)-np.min(x)) * 100
         kge = np.round(kge, 2)
         r = np.round(r, 2)
         beta = np.round(beta, 2)
         alpha = np.round(alpha, 2)
         nse0 = np.round(nse0, 2)
-        nRMSE = int(nRMSE)
         ax1.text(.95, .05, 
-                'r = {:1.2f}\nβ = {:1.2f}\nα = {:1.2f}\nNSE = {:1.2f}\nKGE = {:1.2f}\nnRMSE = {:1.0f}%'.format(r, beta, alpha, nse0, kge, nRMSE),
+                'r = {:1.2f}\nβ = {:1.2f}\nα = {:1.2f}\nNSE = {:1.2f}\nKGE = {:1.2f}\nnRMSE = {:1.1f}%'.format(r, beta, alpha, nse0, kge, nRMSE),
                 linespacing = 1.5, 
                 transform=ax1.transAxes, 
                 size = fontsize, 

@@ -1,5 +1,8 @@
-# module load UDUNITS; module load GDAL; module load R/4.3.2-gfbf-2023a
+# module load UDUNITS; module load GDAL/3.7.1-foss-2023a-spatialite; module load R/4.3.2-gfbf-2023a
 # Rscript --no-restore --no-save calc_GRIT_catch_ave_MSWEP_1.r prName, shpName
+
+# This script is calculate antecedent conditions (ave and std) but only for those grid cells with rainfall greater than 0.1 mm
+
 library(conflicted)
 library(sf)
 library(terra)
@@ -13,10 +16,9 @@ library(doParallel)
 
 args <- commandArgs(trailingOnly = TRUE)
 varName <- args[1]
-year <- as.integer(args[2])
-shpName <- args[3]
-method <- args[4]
-outName <- args[5]
+shpName <- args[2]
+year <- as.integer(args[3])
+outName <- args[4]
 print(varName)
 print(year)
 print(shpName)
@@ -30,15 +32,15 @@ fnames = list.files(path = paste('../../data/MSWX/',varName,'Daily',sep = '/'),
                     pattern = paste0(year,'[0-9][0-9][0-9].nc'),
                     full.name = T)
 func <- function(fname) {
+    cat(paste0("Processed ", fname, "\n"))
     data <- terra::rast(fname)
+    # if (varName == 'P') {
+    #     data[ data < 0.1 ] <- NA
+    # }
     data <- project(data, 'EPSG:8857')
-    if (method != 'ratio') {
-        res <- exact_extract(data, poly0, fun = method)
-    } else {
-        res1 <- exact_extract(data, poly0, fun = 'sum')
-        res2 <- exact_extract(data, poly0, fun = 'count')
-        res <- res1 / res2
-    }
+
+    res <- exact_extract(data, poly0, fun = c('mean','stdev'))
+
     df <- res %>%
     set_names(names(data))
     df <- as.data.frame(df)
@@ -48,17 +50,15 @@ func <- function(fname) {
     rownames(df) <- poly0$global_id
     }
     rowNames0 <- rownames(df)
-    colNames0 <- colnames(df)
+    colNames0 <- c('ave','std')
     df <- data.table::transpose(df)
     colnames(df) <- rowNames0
-    rownames(df) <- colNames0
-    df['variable'] <- rownames(df)
+    df['stat'] <- colNames0
 
     ## Add time by joining against variable name
     df['time'] <- terra::time(data)
 
     ## Remove index from variable name
-    df <- subset(df, select = -c(variable))
     df[is.na(df)] <- 0
     return (df)
 }

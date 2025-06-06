@@ -1,4 +1,4 @@
-import os,glob,cmaps,sys
+import os,glob,cmaps,sys,re,pickle
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -12,14 +12,23 @@ if target not in ['Qmax7','Qmin7','Qmax']:
 fname = f'../data/{target}_seasonal4_multi_MSWX_MSWEP_GLEAM.csv'
 df_meteo = pd.read_csv(fname)
 
+if target == 'Qmax7':
+    df_meteo = df_meteo[['ohdb_id', target+'date'] + df_meteo.columns[df_meteo.columns.str.contains('_7')].tolist()]
+    df_meteo = df_meteo.rename(columns=lambda x:re.sub('_7','',x))
+else:
+    df_meteo = df_meteo[['ohdb_id', target+'date'] + df_meteo.columns[df_meteo.columns.str.contains('_30')].tolist()]
+    df_meteo = df_meteo.rename(columns=lambda x:re.sub('_30','',x))
+
 # merge with discharge
 df_dis = pd.read_csv('../data/dis_OHDB_seasonal4_Qmin7_Qmax7_1982-2023.csv')
+df_dis = df_dis.loc[df_dis.winter_year>=1982,:]
 
 df_meteo[target+'date'] = pd.to_datetime(df_meteo[target+'date'])
 df_dis[target+'date'] = pd.to_datetime(df_dis[target+'date'])
 
-df_meteo = df_meteo.merge(df_dis[[target+'date','season','year',target, 'ohdb_id']], on = ['ohdb_id', target+'date'])
+df_meteo = df_meteo.merge(df_dis[[target+'date','season','countDay', 'winter_year', target, 'ohdb_id']], on = ['ohdb_id', target+'date'])
 df_meteo = df_meteo.rename(columns={target:'Q'})
+df_meteo = df_meteo.rename(columns={'winter_year':'year'})
 
 # add month variable
 df_meteo['month'] = df_meteo[target+'date'].dt.month
@@ -35,7 +44,17 @@ df_lulc = df_lulc.pivot_table(index = ['ohdb_id','year'], columns = 'var', value
 df_lulc[['ImperviousSurface', 'crop', 'forest', 'grass', 'water', 'wetland']] = df_lulc[['ImperviousSurface', 'crop', 'forest', 'grass', 'water', 'wetland']] / 100
 df_lulc[['ImperviousSurface', 'crop', 'forest', 'grass', 'water', 'wetland']] = df_lulc[['ImperviousSurface', 'crop', 'forest', 'grass', 'water', 'wetland']].round(6)
 
-df_attr = pd.read_csv('../data/basin_attributes.csv')
+df_attr = pd.read_csv('../data/basin_attributes_koppen.csv')
+
+# add LAI
+tmp = pd.read_csv('../data/basin_attributes.csv')
+df_attr = df_attr.merge(tmp[['ohdb_id','LAI']], on = 'ohdb_id')
+
+# calculate form factor
+from pyogrio import read_dataframe
+gdf = read_dataframe('../basin_boundary/GRIT_full_catchment_all_EPSG8857_simplify_final_125km2_subset.gpkg')
+gdf['form_factor'] = gdf.area / (gdf.length)**2
+df_attr = df_attr.merge(gdf[['ohdb_id','form_factor']], on = 'ohdb_id')
 
 # merge soil texture fraction
 df_attr['sedimentary'] = df_attr[['su', 'ss', 'sm', 'sc']].fillna(0).sum(1).mul(100)
@@ -68,12 +87,17 @@ df_attr['clay'] = df_attr.loc[:,df_attr.columns.str.contains('clay_layer')].mean
 df_attr['sand'] = df_attr.loc[:,df_attr.columns.str.contains('sand_layer')].mean(axis = 1)
 df_attr['silt'] = df_attr.loc[:,df_attr.columns.str.contains('silt_layer')].mean(axis = 1)
 
+df_attr = df_attr.drop(columns=df_attr.columns[df_attr.columns.str.contains('_layer')])
+df_attr = df_attr.drop(columns=df_attr.columns[df_attr.columns.str.contains('koppen')])
+
+df_attr = df_attr.drop(columns=['logK_Ferr_','grwl_width_median'])
+
 # merge
 df = df_meteo.merge(df_lulc, on = ['ohdb_id','year']).merge(df_attr, on = 'ohdb_id')
 
-# add hydrologic signatures
-hs = pd.read_csv('../data/hydrologic_signatures.csv').rename(columns={'index':'ohdb_id'})
-df = df.merge(hs, on = 'ohdb_id')
+# # add hydrologic signatures
+# hs = pd.read_csv('../data/hydrologic_signatures.csv').rename(columns={'index':'ohdb_id'})
+# df = df.merge(hs, on = 'ohdb_id')
 
 # add dam impact: res_darea_normalize, Year_ave, and Main_Purpose_mode
 dam = pd.read_csv('../data/dam_impact.csv')[['res_darea_normalize', 'Year_ave', 'Main_Purpose_mode', 'ohdb_id']].rename(columns={'Main_Purpose_mode':'Main_Purpose'})
@@ -84,6 +108,9 @@ df['Main_Purpose'] = df['Main_Purpose'].fillna('NoRes').str.lower()
 df.loc[df.Main_Purpose.str.contains('not specified'),'Main_Purpose'] = 'other'
 
 df['climate_label'] = df.climate.map({1:'tropical',2:'dry',3:'temperate',4:'cold',5:'polar'})
+
+# exclude polar gauges
+df = df.loc[df.climate_label!='polar',:].reset_index(drop=True)
 
 # create label-encoding variable for gauge id
 x = pd.DataFrame({'ohdb_id':df.ohdb_id.unique(),'gauge_id':np.arange(1, df.ohdb_id.unique().shape[0]+1)})
@@ -116,11 +143,27 @@ print(df.ohdb_id.unique().shape)
 # df = df.merge(df_pop, on = ['ohdb_id','year'])
 # print(df.ohdb_id.unique().shape)
 
-# round small values to 0.001
-df.loc[(df.Q>0)&(df.Q<0.001),'Q'] = 0
+# round streamflow to three decimal place
+df.loc[(df.Q>0)&(df.Q<0.0005),'Q'] = 0
+df['Q'] = df['Q'].round(3)
 
-if 'seasonal4' in fname:
-    df.to_csv(f'../data/{target}_final_dataset_seasonal4_multi_MSWX_meteo_MSWEP_GLEAM.csv', index = False)
-else:
-    df.to_csv(f'../data/{target}_final_dataset_seasonal_multi_MSWX_meteo_MSWEP_GLEAM.csv', index = False)
-print(df.shape)
+# exclude reservoir gauges by identifying the name that contains the substring of 'RESERVOIR'
+df_attr = pd.read_csv('../../data/OHDB/OHDB_v0.2.3/OHDB_metadata/OHDB_metadata.csv')
+df_attr = df_attr.loc[~df_attr.ohdb_station_name.isna(),:]
+ohdb_ids = df_attr.loc[df_attr.ohdb_station_name.str.contains('RESERVOIR'),'ohdb_id'].values
+df = df.loc[~df.ohdb_id.isin(ohdb_ids),:]
+
+if target == 'Qmax7':
+    df = df.loc[df.Q>0,:]
+
+# limit to those catchment area less than 100,000 km2
+df = df.loc[(df.gritDarea<=100000),:]
+print(df.ohdb_id.unique().shape)
+
+# limit to catchments with at least 80 seasonal samples
+tmp = df.groupby('ohdb_id').Q.count()
+df = df.loc[df.ohdb_id.isin(tmp.loc[tmp>=80].index),:]
+
+df.to_pickle(f'../data/{target}_final_dataset_seasonal4.pkl')
+
+print(df.shape, df.ohdb_id.unique().shape)

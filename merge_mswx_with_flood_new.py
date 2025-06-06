@@ -11,6 +11,7 @@ ParallelPandas.initialize(n_cpu=16, split_factor=16)
 
 # # transform all the meteo files into separate csv files for each gauge
 # def read(year):
+
 #     df2 = pd.read_csv(f'../gleam_data/GRIT_catch_ave_E_{year}_GLEAM_v4.2a.csv').assign(a='evap')
 #     df3 = pd.read_csv(f'../gleam_data/GRIT_catch_ave_SMrz_{year}_GLEAM_v4.2a.csv').assign(a='smrz')
 #     try:
@@ -41,13 +42,13 @@ ParallelPandas.initialize(n_cpu=16, split_factor=16)
 def func_meteo(x, name = 'Qmax7date'):
     ohdb_id = x.xxx.values[0]
     x = x.drop(columns=['xxx'])
-    df_mswx = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}.csv')
+    df_mswx = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}_1981-2023.csv')
     df_mswx['date'] = pd.to_datetime(df_mswx['date'])
-    df_meteo = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}_mswep_gleam.csv')
-    df_meteo['date'] = pd.to_datetime(df_meteo['date'])
-    df_meteo['ohdb_id'] = ohdb_id
-    df_meteo = df_meteo.merge(df_mswx, on = 'date')
-    x = x[['ohdb_id',name]].merge(df_meteo, on = 'ohdb_id')
+    # df_meteo = pd.read_csv(f'../data_mswx/mswx_each_basin/{ohdb_id}_mswep_gleam.csv')
+    # df_meteo['date'] = pd.to_datetime(df_meteo['date'])
+    # df_meteo = df_meteo.merge(df_mswx, on = 'date')
+    df_mswx['ohdb_id'] = ohdb_id
+    x = x[['ohdb_id',name]].merge(df_mswx, on = 'ohdb_id')
     # x['p_meanXstd'] = x['p_mean'] * x['p_std']
     x['tmp'] = (x.date - x[name]).dt.days
     x3 = x.loc[(x.tmp>-3)&(x.tmp<=0),:].drop(columns=['date','ohdb_id','tmp']).groupby(name).mean().rename(columns=lambda x:x+'_3')
@@ -62,6 +63,8 @@ fname = '../data/dis_OHDB_seasonal4_Qmin7_Qmax7_1982-2023.csv'
 df_flood = pd.read_csv(fname)
 df_flood['Qmax7date'] = pd.to_datetime(df_flood['Qmax7date'])
 df_flood['Qmin7date'] = pd.to_datetime(df_flood['Qmin7date'])
+
+df_flood = df_flood.loc[df_flood.winter_year>=1982,:]
 
 df_flood['xxx'] = df_flood['ohdb_id'].values
 

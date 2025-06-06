@@ -75,22 +75,27 @@ def create_fishnet(gdf0, nrow = 10, ncol = 10):
     gdf_fishnet = gpd.GeoDataFrame(pd.DataFrame({'grid_id':np.arange(len(fishnet))}), geometry = fishnet, crs = 'epsg:8857')
     return gdf_fishnet
 
-def step_dissolve_polygon(gdf0):
+def step_dissolve_polygon(gdf0, parallel = True):
     '''dissolve for huge datasets, such as 10,000 records'''
     # Create a grid
-    gdf_fishnet = create_fishnet(gdf0)
+    gdf_fishnet = create_fishnet(gdf0, nrow = 10, ncol = 10)
     # Assign polygons to grid cells
     gdf0_join = gpd.sjoin(gdf0, gdf_fishnet, how = 'left')
     gdf0_join = gdf0_join.loc[~gdf0_join.grid_id.isna(),:]
     gdf0_join = gdf0_join.groupby('global_id').apply(lambda x:x.iloc[0,:])
-    # parallel dissolving
-    gdf0_join = gdf0_join.groupby('grid_id').p_apply(lambda x:x.dissolve())
+    if parallel:
+        # parallel dissolving
+        gdf0_join = gdf0_join.groupby('grid_id').p_apply(lambda x:x.dissolve()).reset_index(drop = True)
+    else:
+        gdf0_join = pd.concat([
+            gdf0_join.loc[gdf0_join.grid_id==x,:].dissolve() for x in gdf0_join.grid_id.unique()
+        ])
     gdf0_join['global_id'] = np.arange(gdf0_join.shape[0])
     gdf0_join = gdf0_join[['global_id','geometry']]
-    gdf0_join = gdf0_join.reset_index().drop(columns=['grid_id'])
     gdf0_join = gdf0_join.set_crs('epsg:8857')
 
     # further dissolve parallel
+    print(f'Dissolving {gdf0_join.shape[0]} geometries......')
     gdf_fishnet = create_fishnet(gdf0_join, nrow = 3, ncol = 3)
     gdf0_join = gpd.sjoin(gdf0_join, gdf_fishnet, how = 'left')
     gdf0_join = gdf0_join.loc[~gdf0_join.grid_id.isna(),:]
@@ -102,16 +107,21 @@ def step_dissolve_polygon(gdf0):
     return polygon
 
 def dissolve(ohdb_id):
-    if os.path.exists(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg'):
+    if os.path.exists(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/raw/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg'):
         print(ohdb_id, 'already has')
         return
     tmp0 = tmp.loc[tmp.ohdb_id==ohdb_id,:].reset_index()
     ohdb_darea = tmp0.ohdb_catchment_area_hydrosheds.values[0]
     # ohdb_darea_fill = tmp0.ohdb_catchment_area_hydrosheds.values[0]
 
-    # common basin dissolve
+    # a gauge is matched to multiple GRIT reaches typically, so their common basins are dissolved at first, and
+    # only for those reaches with no less than 100 reaches
     upstream_dict = {k:get_upstream_func(k) for k in tmp0.global_id.values}
-    upstream_c = list(set.intersection(*map(set, list(upstream_dict.values()))))
+    upstream_dict_100 = {k:v for k,v in upstream_dict.items() if len(v) >= 100}
+    if len(upstream_dict_100) > 0:
+        upstream_c = list(set.intersection(*map(set, list(upstream_dict_100.values()))))
+    else:
+        upstream_c = list(set.intersection(*map(set, list(upstream_dict.values()))))
     print('Common upstream reaches have ', len(upstream_c))
     catch0_c = None
     catch_id_c = []
@@ -127,7 +137,7 @@ def dissolve(ohdb_id):
         # dissolve
         print(f'Dissolving {catch0_c.shape[0]} geometries......')
         if catch0_c.shape[0] > 1000:
-            catch0_c = step_dissolve_polygon(catch0_c)
+            catch0_c = step_dissolve_polygon(catch0_c, parallel = True)
         else:
             catch0_c = catch0_c.dissolve().geometry.values[0]
 
@@ -156,9 +166,10 @@ def dissolve(ohdb_id):
         else:
             catch_ids.append({})
 
-
     # get unique catch-sets
     unique_catch_ids = pd.DataFrame({'catch_ids':catch_ids,'reach_ids':tmp0.global_id.values,'segment_ids':segment_ids})
+    unique_catch_ids['need_common_catch'] = False
+    unique_catch_ids.loc[unique_catch_ids.reach_ids.isin(upstream_dict_100.keys()),'need_common_catch'] = True
     unique_catch_ids = unique_catch_ids.drop_duplicates(subset=['catch_ids'])
     unique_catch_ids['catch_ids'] = unique_catch_ids['catch_ids'].apply(lambda x:list(x))
 
@@ -171,12 +182,17 @@ def dissolve(ohdb_id):
             catch0 = catch.loc[catch0_ids]
             # dissolve
             print(f'Dissolving {catch0.shape[0]} geometries......')
-            if catch0.shape[0] > 1000:
-                catch0 = step_dissolve_polygon(catch0)
-            else:
+            if catch0.shape[0] > 1000 and catch0.shape[0] <= 100000:
+                catch0 = step_dissolve_polygon(catch0, parallel = True)
+            elif catch0.shape[0] > 100000:
+                catch0 = step_dissolve_polygon(catch0, parallel = True)
+            elif catch0.shape[0] <= 1000 and catch0.shape[0] > 1:
                 catch0 = catch0.dissolve().geometry.values[0]
+            elif catch0.shape[0] == 1:
+                catch0 = catch0.geometry.values[0]
             # union with catch0_c
-            if catch0_c is not None:
+            if catch0_c is not None and row.need_common_catch is True:
+                print('Dissolving catch0 with common catch......')
                 catch0 = unary_union([catch0, catch0_c])
         else:
             catch0 = catch0_c
@@ -196,17 +212,27 @@ def dissolve(ohdb_id):
     unique_catch_ids['ohdb_darea'] = ohdb_darea
     out0 = unique_catch_ids.iloc[[idx],:]
     out0 = gpd.GeoDataFrame(data = out0, geometry = np.array([geometries[idx]]), crs = 'epsg:8857')
-    write_dataframe(out0, f'../data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg')
+    write_dataframe(out0, f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/raw/GRITv06_full_catchment_EPSG8857_{domain}_{ohdb_id}.gpkg')
     print(ohdb_id, 'yes', grit_darea[idx], ohdb_darea)
 
 # get global_id of all reaches
 if __name__ == '__main__':
     gdf_sta = read_dataframe('/data/ouce-drift/cenv1021/data/OHDB/OHDB_v0.2.3/OHDB_metadata_fill_hydrosheds_fcc.gpkg')
+    gdf_sta = gdf_sta.sort_values('ohdb_catchment_area_hydrosheds', ascending = False)
+    gdf_sta = gdf_sta.loc[gdf_sta.domain==domain,:]
+
+    try:
+        # split the task
+        start = int(sys.argv[2])
+        end = int(sys.argv[3])
+        gdf_sta = gdf_sta.iloc[start:end,:]
+    except:
+        print('do')
 
     # remove stations that have been already processed
-    fnames = glob.glob(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/GRITv06_full_catchment_EPSG8857_{domain}_OHDB*.gpkg')
+    fnames = glob.glob(f'/data/ouce-drift/cenv1021/data/GRIT/full_catchment/raw/GRITv06_full_catchment_EPSG8857_{domain}_OHDB*.gpkg')
     ohdb_ids = [re.search(r'OHDB_\d+',a).group(0) for a in fnames]
-    gdf_sta = gdf_sta.loc[(~gdf_sta.ohdb_id.isin(ohdb_ids))&(gdf_sta.domain==domain),:]
+    gdf_sta = gdf_sta.loc[(~gdf_sta.ohdb_id.isin(ohdb_ids)),:]
     if gdf_sta.shape[0] == 0:
         sys.exit('All stations have been processed')
 
@@ -240,7 +266,12 @@ if __name__ == '__main__':
     print('Finish subseting reaches', reach.shape)
 
     # read and subset catchment to reduce the risk of out-of-memory error
-    catch = read_dataframe(f'/data/ouce-evoflood/results/global_river_topology/output_v06/catchments/GRITv06_reach_catchments_{domain}_EPSG8857.gpkg')
+    catchName = f'/data/ouce-evoflood/results/global_river_topology/output_v06/catchments/GRITv06_reach_catchments_{domain}_EPSG8857.gpkg'
+    columns = ['global_id']
+    bbox = reach.total_bounds.tolist()
+    bbox = (bbox[0] - 5000, bbox[1] - 5000, bbox[2] + 5000, bbox[3] + 5000)
+    catch = read_dataframe(catchName, columns = columns, bbox = bbox)
+
     catch['global_id'] = catch['global_id'].astype(np.int64)
     catch['geometry1'] = catch.geometry.values
     catch['geometry'] = catch.centroid
@@ -262,18 +293,8 @@ if __name__ == '__main__':
 
     # get unique OHDB IDs to be processed
     ohdb_ids = tmp.ohdb_id.unique()
-    
-    try:
-        # split the task
-        start = int(sys.argv[2])
-        end = int(sys.argv[3])
-        ohdb_ids = ohdb_ids[start:end]
-    except:
-        print('do')
-        
-    # number = len(ohdb_ids)
-    # for i,ohdb_id in enumerate(ohdb_ids):
-    #     print(f'There are {number-i} stations to be processed')
-    #     dissolve(ohdb_id)
-    ohdb_id = 'OHDB_014022469'
-    dissolve(ohdb_id)
+            
+    number = len(ohdb_ids)
+    for i,ohdb_id in enumerate(ohdb_ids):
+        print(f'There are {number-i} stations to be processed')
+        dissolve(ohdb_id)
