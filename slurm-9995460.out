@@ -1,0 +1,330 @@
+attr_name: ['BDTICM', 'elevation', 'slope', 'sedimentary', 'plutonic', 'volcanic', 'metamorphic', 'clay', 'sand', 'silt', 'Porosity_x', 'logK_Ice_x', 'year', 'climate', 'season_id', 'basin_id', 'ohdb_latitude', 'ohdb_longitude', 'res_darea_normalize', 'Year_ave', 'Main_Purpose_id', 'form_factor', 'LAI']
+delta_feature: 10
+device: cpu
+even: False
+feature: ImperviousSurface
+fname: ../data/Qmin7_final_dataset_seasonal4.pkl
+gpu: False
+iteration: 30
+log: True
+lulc_name: ['ImperviousSurface']
+m3s: False
+meteo_name: ['p', 'tmax', 'tmin', 'swd', 'snowmelt', 'smrz']
+min_interval: 0
+mode: noLULC
+model: xgb
+num_workers: 8
+purpose: cv
+run_dir: ../results/run_Qmin7_onlyUrban_0506_1357_seed220973
+seed: 220973
+target: Qmin7
+n_iter: 100
+n_explain: 100
+Fitting 3 folds for each of 100 candidates, totalling 300 fits
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.6;, score=0.649 total time=  17.0s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=3, n_estimators=800, subsample=0.7;, score=0.795 total time=  36.7s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=1.0;, score=0.864 total time=  55.9s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.6;, score=0.554 total time=  12.1s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=1.0;, score=0.781 total time=  45.0s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=200, subsample=0.9;, score=0.743 total time=  32.7s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.8;, score=0.795 total time=  18.9s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.9;, score=0.664 total time=  26.3s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.7;, score=0.814 total time=  25.4s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.7;, score=0.817 total time=  25.2s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.9;, score=0.794 total time=  18.5s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.9;, score=0.759 total time=  10.0s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=1.0;, score=0.870 total time= 2.0min
+/home/cenv1021/.local/lib/python3.9/site-packages/joblib/externals/loky/process_executor.py:752: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.6;, score=0.648 total time=  16.9s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.8;, score=0.883 total time=  27.1s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=1.0;, score=0.864 total time=  56.6s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=1.0;, score=0.807 total time=  41.3s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=200, subsample=0.9;, score=0.742 total time=  33.2s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.782 total time=  47.9s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.9;, score=0.668 total time=  26.7s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.7;, score=0.815 total time=  25.5s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.897 total time=  47.9s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=1.0;, score=0.868 total time= 2.0min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=9, n_estimators=300, subsample=0.9;, score=0.928 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.9;, score=0.918 total time=  43.5s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.781 total time=  52.0s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=1.0;, score=0.807 total time=  43.5s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=300, subsample=0.8;, score=0.872 total time=  39.8s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.784 total time=  49.0s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=500, subsample=0.7;, score=0.754 total time=  45.2s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.895 total time=  46.5s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.9;, score=0.760 total time=  10.1s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=3, n_estimators=200, subsample=0.9;, score=0.722 total time=  10.4s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.7;, score=0.778 total time=  14.5s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.7;, score=0.782 total time=  14.3s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=1.0;, score=0.895 total time=  24.4s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=100, subsample=0.7;, score=0.612 total time=  17.7s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.849 total time=  22.6s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.849 total time=  22.9s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.899 total time=  40.5s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=500, subsample=1.0;, score=0.939 total time= 1.7min
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.9;, score=0.919 total time=  44.7s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=1.0;, score=0.864 total time= 1.0min
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.6;, score=0.557 total time=  12.9s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.6;, score=0.558 total time=  12.3s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=1.0;, score=0.783 total time=  47.7s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.781 total time=  48.9s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=500, subsample=0.7;, score=0.755 total time=  45.3s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.897 total time=  46.9s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=1.0;, score=0.870 total time= 2.0min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=9, n_estimators=300, subsample=0.9;, score=0.928 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=500, subsample=1.0;, score=0.938 total time= 1.7min
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.9;, score=0.723 total time=   6.7s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.8;, score=0.882 total time=  27.8s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=3, n_estimators=800, subsample=0.7;, score=0.796 total time=  37.6s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=0.9;, score=0.865 total time= 1.0min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=300, subsample=0.8;, score=0.871 total time=  39.4s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=1000, subsample=0.9;, score=0.933 total time= 2.2min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.6;, score=0.781 total time= 1.1min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=7, n_estimators=1000, subsample=0.7;, score=0.918 total time= 2.2min
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=500, subsample=1.0;, score=0.938 total time= 1.7min
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.9;, score=0.918 total time=  43.6s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.784 total time=  48.0s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=1.0;, score=0.806 total time=  41.7s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=300, subsample=0.8;, score=0.871 total time=  38.4s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=1000, subsample=0.9;, score=0.933 total time= 2.2min
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.6;, score=0.782 total time= 1.1min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=1.0;, score=0.896 total time=  24.1s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=100, subsample=0.7;, score=0.614 total time=  17.9s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=7, n_estimators=100, subsample=0.7;, score=0.615 total time=  17.9s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.849 total time=  22.2s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.900 total time=  40.9s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.899 total time=  40.5s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=500, subsample=0.9;, score=0.687 total time=  26.0s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.9;, score=0.781 total time=  14.0s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.784 total time=  47.4s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=0.7;, score=0.866 total time= 2.2min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=3, n_estimators=800, subsample=0.8;, score=0.716 total time=  39.9s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=0.7;, score=0.867 total time= 2.2min
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.9;, score=0.724 total time=   6.2s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.9;, score=0.725 total time=   6.5s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.8;, score=0.884 total time=  27.2s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.783 total time=  48.7s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=0.9;, score=0.866 total time=  58.3s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=200, subsample=0.9;, score=0.740 total time=  32.7s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.8;, score=0.794 total time=  18.6s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.8;, score=0.795 total time=  18.8s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.9;, score=0.667 total time=  26.3s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=500, subsample=0.7;, score=0.757 total time=  46.3s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.9;, score=0.794 total time=  18.2s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.6;, score=0.784 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=7, n_estimators=1000, subsample=0.7;, score=0.917 total time= 2.2min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.9;, score=0.892 total time=  54.2s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.9;, score=0.781 total time=  14.0s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=3, n_estimators=800, subsample=0.8;, score=0.714 total time=  39.5s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.662 total time=  24.5s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=9, n_estimators=500, subsample=0.7;, score=0.865 total time= 2.2min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.6;, score=0.647 total time=  17.6s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=3, n_estimators=800, subsample=0.7;, score=0.796 total time=  38.8s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=800, subsample=0.9;, score=0.865 total time= 1.0min
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=1.0;, score=0.782 total time=  47.8s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=1000, subsample=0.9;, score=0.933 total time= 2.2min
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.9;, score=0.796 total time=  18.3s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.9;, score=0.758 total time=  10.0s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=3, n_estimators=200, subsample=0.9;, score=0.724 total time=  10.5s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=3, n_estimators=200, subsample=0.9;, score=0.725 total time=  10.5s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.7;, score=0.779 total time=  14.3s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=1.0;, score=0.895 total time=  24.3s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=7, n_estimators=1000, subsample=0.7;, score=0.918 total time= 2.2min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=500, subsample=0.9;, score=0.688 total time=  26.0s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=500, subsample=0.9;, score=0.689 total time=  26.5s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.781 total time=  46.3s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.663 total time=  24.7s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.780 total time=  44.1s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=0.9;, score=0.937 total time= 2.9min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.8;, score=0.892 total time=  56.4s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.7;, score=0.899 total time= 3.6min
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.8;, score=0.892 total time=  57.0s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.782 total time=  44.3s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=0.9;, score=0.936 total time= 2.9min
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=9, n_estimators=300, subsample=0.9;, score=0.928 total time= 1.1min
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.9;, score=0.893 total time=  56.1s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.783 total time=  47.2s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.8;, score=0.893 total time=  56.6s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.7;, score=0.898 total time= 3.6min
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=800, subsample=0.9;, score=0.892 total time=  55.7s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=0.9;, score=0.783 total time=  14.0s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=3, n_estimators=800, subsample=0.8;, score=0.713 total time=  39.7s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.660 total time=  24.5s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.7;, score=0.781 total time=  43.8s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.7;, score=0.900 total time= 3.6min
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.940 total time= 3.8min
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.7;, score=0.918 total time=  44.4s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.7;, score=0.865 total time=  26.7s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.899 total time= 4.0min
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.6;, score=0.781 total time=  44.7s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.8;, score=0.850 total time=  23.1s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=300, subsample=1.0;, score=0.840 total time= 1.2min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.7;, score=0.648 total time=  17.3s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=0.6;, score=0.808 total time=  45.5s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.898 total time= 4.0min
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.6;, score=0.782 total time=  46.9s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=5, n_estimators=200, subsample=0.8;, score=0.680 total time=  20.7s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.795 total time=  19.1s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=1.0;, score=0.790 total time=   9.2s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=1.0;, score=0.791 total time=   9.6s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.8;, score=0.817 total time=  26.4s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.7;, score=0.918 total time=  43.7s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.8;, score=0.662 total time=  24.3s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=1.0;, score=0.648 total time=  16.3s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.853 total time=  24.6s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.818 total time=  27.0s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.7;, score=0.883 total time=  27.6s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.6;, score=0.917 total time=  47.1s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.6;, score=0.917 total time=  47.8s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=1.0;, score=0.936 total time= 2.7min
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.8;, score=0.849 total time=  23.3s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=5, n_estimators=200, subsample=0.8;, score=0.677 total time=  20.8s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.796 total time=  18.8s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.797 total time=  19.0s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=1.0;, score=0.794 total time=   9.7s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.8;, score=0.816 total time=  26.2s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.7;, score=0.649 total time=  17.0s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.7;, score=0.865 total time=  30.5s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.8;, score=0.660 total time=  23.8s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.853 total time=  24.8s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=1.0;, score=0.869 total time=  24.3s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=0.8;, score=0.910 total time= 1.6min
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=300, subsample=0.6;, score=0.911 total time= 1.2min
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=1.0;, score=0.936 total time= 2.7min
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=0.9;, score=0.937 total time= 2.8min
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=5, n_estimators=200, subsample=0.8;, score=0.679 total time=  21.5s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=300, subsample=1.0;, score=0.837 total time= 1.2min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=0.7;, score=0.647 total time=  17.6s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=0.6;, score=0.809 total time=  44.6s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.01, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.899 total time= 4.0min
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.6;, score=0.897 total time=  46.7s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=500, subsample=0.8;, score=0.774 total time=  23.4s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.780 total time=  49.4s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.795 total time=  18.1s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.9;, score=0.829 total time=  16.4s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=500, subsample=0.7;, score=0.844 total time=  41.1s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.658 total time=  23.6s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.7;, score=0.805 total time=  22.3s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=800, subsample=1.0;, score=0.841 total time= 1.9min
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=800, subsample=0.7;, score=0.927 total time= 1.8min
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.8;, score=0.557 total time=  11.7s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.8;, score=0.940 total time= 3.8min
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.6;, score=0.896 total time=  45.1s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=500, subsample=0.8;, score=0.772 total time=  23.1s
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.781 total time=  48.8s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.792 total time=  17.7s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=7, n_estimators=100, subsample=0.7;, score=0.814 total time=  16.7s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.9;, score=0.828 total time=  16.7s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.899 total time=  39.3s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.659 total time=  23.2s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.8;, score=0.895 total time=  23.7s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=1.0;, score=0.898 total time=  40.6s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.6;, score=0.895 total time=  24.8s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=800, subsample=0.7;, score=0.927 total time= 1.8min
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.815 total time=  24.9s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=1.0;, score=0.816 total time=  24.9s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.8;, score=0.940 total time= 3.8min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=100, subsample=1.0;, score=0.756 total time=  11.0s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=300, subsample=0.7;, score=0.720 total time=  29.2s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=300, subsample=0.7;, score=0.721 total time=  29.1s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.9;, score=0.807 total time=  21.8s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.9;, score=0.782 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=500, subsample=0.7;, score=0.843 total time=  40.5s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=1000, subsample=0.8;, score=0.795 total time= 1.3min
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.6;, score=0.894 total time=  25.0s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=1000, subsample=0.6;, score=0.877 total time= 1.3min
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=1.0;, score=0.782 total time=  13.8s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.898 total time=  45.1s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.816 total time=  26.0s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.8;, score=0.555 total time=  11.5s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.8;, score=0.940 total time= 3.8min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.940 total time= 3.8min
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=1.0;, score=0.649 total time=  16.5s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=1.0;, score=0.867 total time=  24.5s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8;, score=0.723 total time=   6.4s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8;, score=0.722 total time=   6.4s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8;, score=0.724 total time=   6.4s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=0.8;, score=0.910 total time= 1.6min
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=300, subsample=0.6;, score=0.909 total time= 1.2min
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=100, subsample=1.0;, score=0.758 total time=  11.1s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=300, subsample=0.7;, score=0.718 total time=  29.8s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=500, subsample=0.8;, score=0.772 total time=  23.5s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.9;, score=0.806 total time=  22.2s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.9;, score=0.783 total time= 1.2min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.9;, score=0.899 total time=  39.7s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=1000, subsample=0.8;, score=0.794 total time= 1.4min
+[CV 1/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.6;, score=0.894 total time=  25.8s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=1000, subsample=0.6;, score=0.876 total time= 1.4min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=1.0;, score=0.784 total time=  14.4s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=1.0;, score=0.910 total time= 1.6min
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=300, subsample=0.7;, score=0.747 total time=  15.4s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.9;, score=0.899 total time=  38.2s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=5, n_estimators=1000, subsample=0.8;, score=0.794 total time= 1.3min
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=1.0;, score=0.899 total time=  42.1s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=800, subsample=0.7;, score=0.928 total time= 1.8min
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=1.0;, score=0.910 total time= 1.5min
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.6;, score=0.780 total time=  44.0s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.8;, score=0.849 total time=  23.0s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=300, subsample=1.0;, score=0.839 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.7;, score=0.917 total time=  43.3s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.7;, score=0.867 total time=  26.2s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=3, n_estimators=300, subsample=1.0;, score=0.647 total time=  16.1s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=1.0;, score=0.868 total time=  23.8s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.817 total time=  26.4s
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=0.8;, score=0.910 total time= 1.6min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=300, subsample=0.6;, score=0.910 total time= 1.1min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=100, subsample=1.0;, score=0.756 total time=  11.1s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.6;, score=0.897 total time=  46.2s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.9;, score=0.806 total time=  22.3s
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.01, max_depth=7, n_estimators=300, subsample=0.8;, score=0.783 total time=  49.3s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=7, n_estimators=100, subsample=0.7;, score=0.814 total time=  16.9s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.9;, score=0.827 total time=  16.0s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=500, subsample=0.7;, score=0.845 total time=  40.6s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.7;, score=0.657 total time=  23.7s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.7;, score=0.807 total time=  22.5s
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=800, subsample=1.0;, score=0.842 total time= 1.9min
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.8;, score=0.867 total time=  26.2s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=3, n_estimators=300, subsample=1.0;, score=0.781 total time=  14.2s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.899 total time=  45.5s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=1.0;, score=0.815 total time=  25.6s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=100, subsample=0.8;, score=0.557 total time=  11.5s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=300, subsample=0.7;, score=0.745 total time=  15.2s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=3, n_estimators=800, subsample=0.6;, score=0.826 total time=  33.6s
+[CV 1/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=5, n_estimators=200, subsample=0.7;, score=0.793 total time=  17.9s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=7, n_estimators=100, subsample=0.7;, score=0.816 total time=  16.8s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.9;, score=0.899 total time=  38.2s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.899 total time=  38.7s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.8;, score=0.896 total time=  23.8s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=7, n_estimators=800, subsample=1.0;, score=0.843 total time= 1.9min
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.8;, score=0.865 total time=  25.9s
+[CV 1/3] END colsample_bytree=0.8, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=0.9;, score=0.898 total time=  45.1s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.815 total time=  25.1s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=1.0;, score=0.819 total time=  25.4s
+[CV 2/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=300, subsample=0.7;, score=0.746 total time=  15.1s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=3, n_estimators=800, subsample=0.6;, score=0.826 total time=  34.8s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=9, n_estimators=1000, subsample=0.9;, score=0.939 total time= 3.8min
+[CV 3/3] END colsample_bytree=1.0, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.8;, score=0.818 total time=  27.1s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=3, n_estimators=1000, subsample=0.6;, score=0.807 total time=  45.2s
+[CV 3/3] END colsample_bytree=0.7, learning_rate=0.01, max_depth=9, n_estimators=100, subsample=0.8;, score=0.663 total time=  25.4s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=5, n_estimators=300, subsample=0.9;, score=0.852 total time=  24.9s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=300, subsample=0.6;, score=0.817 total time=  27.4s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.7;, score=0.885 total time=  28.2s
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.1, max_depth=7, n_estimators=200, subsample=0.7;, score=0.884 total time=  27.9s
+[CV 2/3] END colsample_bytree=1.0, learning_rate=0.1, max_depth=9, n_estimators=200, subsample=0.6;, score=0.917 total time=  48.1s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=9, n_estimators=800, subsample=1.0;, score=0.936 total time= 2.8min
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.01, max_depth=5, n_estimators=800, subsample=0.9;, score=0.784 total time= 1.2min
+[CV 2/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=7, n_estimators=300, subsample=0.7;, score=0.899 total time=  39.6s
+[CV 1/3] END colsample_bytree=0.7, learning_rate=0.1, max_depth=3, n_estimators=500, subsample=0.7;, score=0.805 total time=  22.8s
+[CV 3/3] END colsample_bytree=0.8, learning_rate=0.1, max_depth=9, n_estimators=100, subsample=0.8;, score=0.896 total time=  24.3s
+[CV 2/3] END colsample_bytree=0.6, learning_rate=0.05, max_depth=9, n_estimators=200, subsample=1.0;, score=0.898 total time=  41.9s
+[CV 1/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=5, n_estimators=1000, subsample=0.6;, score=0.876 total time= 1.3min
+[CV 3/3] END colsample_bytree=0.9, learning_rate=0.05, max_depth=9, n_estimators=100, subsample=0.8;, score=0.868 total time=  27.0s
+[CV 2/3] END colsample_bytree=0.7, learning_rate=0.05, max_depth=7, n_estimators=800, subsample=1.0;, score=0.910 total time= 1.6min
+[CV 3/3] END colsample_bytree=0.6, learning_rate=0.1, max_depth=3, n_estimators=800, subsample=0.6;, score=0.827 total time=  37.8s
+<LAMBDA> DONE:   0%|          | 0/8619 [00:00<?, ?it/s]<LAMBDA> DONE:   0%|          | 1/8619 [00:01<4:00:34,  1.67s/it]<LAMBDA> DONE:   1%|          | 106/8619 [00:01<01:42, 82.99it/s]<LAMBDA> DONE:   2%|▏         | 207/8619 [00:01<00:47, 176.47it/s]<LAMBDA> DONE:   4%|▎         | 306/8619 [00:01<00:29, 278.36it/s]<LAMBDA> DONE:   5%|▍         | 409/8619 [00:02<00:20, 392.76it/s]<LAMBDA> DONE:   6%|▌         | 516/8619 [00:02<00:15, 512.55it/s]<LAMBDA> DONE:   7%|▋         | 619/8619 [00:02<00:12, 616.48it/s]<LAMBDA> DONE:   8%|▊         | 724/8619 [00:02<00:11, 713.74it/s]<LAMBDA> DONE:  10%|▉         | 830/8619 [00:02<00:09, 796.63it/s]<LAMBDA> DONE:  11%|█         | 933/8619 [00:02<00:09, 850.25it/s]<LAMBDA> DONE:  12%|█▏        | 1038/8619 [00:02<00:08, 903.24it/s]<LAMBDA> DONE:  13%|█▎        | 1144/8619 [00:02<00:07, 945.10it/s]<LAMBDA> DONE:  14%|█▍        | 1248/8619 [00:02<00:07, 965.13it/s]<LAMBDA> DONE:  16%|█▌        | 1351/8619 [00:02<00:07, 978.50it/s]<LAMBDA> DONE:  17%|█▋        | 1455/8619 [00:03<00:07, 992.96it/s]<LAMBDA> DONE:  18%|█▊        | 1558/8619 [00:03<00:07, 994.75it/s]<LAMBDA> DONE:  19%|█▉        | 1660/8619 [00:03<00:06, 1000.89it/s]<LAMBDA> DONE:  20%|██        | 1765/8619 [00:03<00:06, 1012.94it/s]<LAMBDA> DONE:  22%|██▏       | 1870/8619 [00:03<00:06, 1023.51it/s]<LAMBDA> DONE:  23%|██▎       | 1974/8619 [00:03<00:06, 1021.56it/s]<LAMBDA> DONE:  24%|██▍       | 2080/8619 [00:03<00:06, 1032.90it/s]<LAMBDA> DONE:  25%|██▌       | 2184/8619 [00:03<00:06, 1029.08it/s]<LAMBDA> DONE:  27%|██▋       | 2288/8619 [00:04<00:08, 733.27it/s] <LAMBDA> DONE:  28%|██▊       | 2393/8619 [00:04<00:07, 802.78it/s]<LAMBDA> DONE:  29%|██▉       | 2499/8619 [00:04<00:07, 865.00it/s]<LAMBDA> DONE:  30%|███       | 2605/8619 [00:04<00:06, 913.26it/s]<LAMBDA> DONE:  31%|███▏      | 2711/8619 [00:04<00:06, 951.34it/s]<LAMBDA> DONE:  33%|███▎      | 2814/8619 [00:04<00:05, 973.17it/s]<LAMBDA> DONE:  34%|███▍      | 2922/8619 [00:04<00:05, 1001.35it/s]<LAMBDA> DONE:  35%|███▌      | 3025/8619 [00:04<00:05, 1005.41it/s]<LAMBDA> DONE:  36%|███▋      | 3128/8619 [00:04<00:05, 1009.05it/s]<LAMBDA> DONE:  38%|███▊      | 3234/8619 [00:04<00:05, 1022.91it/s]<LAMBDA> DONE:  39%|███▊      | 3338/8619 [00:05<00:05, 1020.65it/s]<LAMBDA> DONE:  40%|███▉      | 3443/8619 [00:05<00:05, 1025.45it/s]<LAMBDA> DONE:  41%|████      | 3550/8619 [00:05<00:04, 1036.60it/s]<LAMBDA> DONE:  42%|████▏     | 3655/8619 [00:05<00:04, 1027.96it/s]<LAMBDA> DONE:  44%|████▎     | 3764/8619 [00:05<00:04, 1044.84it/s]<LAMBDA> DONE:  45%|████▍     | 3869/8619 [00:05<00:04, 1022.25it/s]<LAMBDA> DONE:  46%|████▌     | 3980/8619 [00:05<00:04, 1046.79it/s]<LAMBDA> DONE:  47%|████▋     | 4085/8619 [00:05<00:04, 1040.55it/s]<LAMBDA> DONE:  49%|████▊     | 4190/8619 [00:05<00:04, 1036.78it/s]<LAMBDA> DONE:  50%|████▉     | 4297/8619 [00:05<00:04, 1043.90it/s]<LAMBDA> DONE:  51%|█████     | 4402/8619 [00:06<00:04, 1022.96it/s]<LAMBDA> DONE:  52%|█████▏    | 4509/8619 [00:06<00:03, 1035.51it/s]<LAMBDA> DONE:  54%|█████▎    | 4613/8619 [00:06<00:03, 1023.18it/s]<LAMBDA> DONE:  55%|█████▍    | 4716/8619 [00:06<00:03, 1019.64it/s]<LAMBDA> DONE:  56%|█████▌    | 4824/8619 [00:06<00:03, 1036.04it/s]<LAMBDA> DONE:  57%|█████▋    | 4928/8619 [00:06<00:03, 1018.23it/s]<LAMBDA> DONE:  58%|█████▊    | 5039/8619 [00:06<00:03, 1043.00it/s]<LAMBDA> DONE:  60%|█████▉    | 5144/8619 [00:06<00:03, 1036.25it/s]<LAMBDA> DONE:  61%|██████    | 5250/8619 [00:06<00:03, 1042.22it/s]<LAMBDA> DONE:  62%|██████▏   | 5359/8619 [00:06<00:03, 1052.87it/s]<LAMBDA> DONE:  63%|██████▎   | 5465/8619 [00:07<00:03, 1042.76it/s]<LAMBDA> DONE:  65%|██████▍   | 5570/8619 [00:07<00:02, 1042.64it/s]<LAMBDA> DONE:  66%|██████▌   | 5675/8619 [00:07<00:02, 1042.00it/s]<LAMBDA> DONE:  67%|██████▋   | 5780/8619 [00:07<00:03, 791.64it/s] <LAMBDA> DONE:  68%|██████▊   | 5884/8619 [00:07<00:03, 846.41it/s]<LAMBDA> DONE:  69%|██████▉   | 5990/8619 [00:07<00:02, 899.50it/s]<LAMBDA> DONE:  71%|███████   | 6094/8619 [00:07<00:02, 935.24it/s]<LAMBDA> DONE:  72%|███████▏  | 6198/8619 [00:07<00:02, 962.48it/s]<LAMBDA> DONE:  73%|███████▎  | 6305/8619 [00:08<00:02, 992.28it/s]<LAMBDA> DONE:  74%|███████▍  | 6412/8619 [00:08<00:02, 1006.94it/s]<LAMBDA> DONE:  76%|███████▌  | 6516/8619 [00:08<00:02, 1013.60it/s]<LAMBDA> DONE:  77%|███████▋  | 6623/8619 [00:08<00:01, 1027.65it/s]<LAMBDA> DONE:  78%|███████▊  | 6727/8619 [00:08<00:01, 1027.93it/s]<LAMBDA> DONE:  79%|███████▉  | 6831/8619 [00:08<00:01, 1026.49it/s]<LAMBDA> DONE:  80%|████████  | 6937/8619 [00:08<00:01, 1034.94it/s]<LAMBDA> DONE:  82%|████████▏ | 7041/8619 [00:08<00:01, 1035.26it/s]<LAMBDA> DONE:  83%|████████▎ | 7145/8619 [00:08<00:01, 1023.05it/s]<LAMBDA> DONE:  84%|████████▍ | 7249/8619 [00:08<00:01, 1024.74it/s]<LAMBDA> DONE:  85%|████████▌ | 7357/8619 [00:09<00:01, 1027.52it/s]<LAMBDA> DONE:  87%|████████▋ | 7461/8619 [00:09<00:01, 1028.76it/s]<LAMBDA> DONE:  88%|████████▊ | 7571/8619 [00:09<00:00, 1049.15it/s]<LAMBDA> DONE:  89%|████████▉ | 7676/8619 [00:09<00:00, 1040.30it/s]<LAMBDA> DONE:  90%|█████████ | 7781/8619 [00:09<00:00, 1038.39it/s]<LAMBDA> DONE:  92%|█████████▏| 7887/8619 [00:09<00:00, 1040.35it/s]<LAMBDA> DONE:  93%|█████████▎| 7992/8619 [00:09<00:00, 1040.23it/s]<LAMBDA> DONE:  94%|█████████▍| 8097/8619 [00:09<00:00, 1040.75it/s]<LAMBDA> DONE:  95%|█████████▌| 8202/8619 [00:09<00:00, 1034.59it/s]<LAMBDA> DONE:  96%|█████████▋| 8306/8619 [00:09<00:00, 1031.50it/s]<LAMBDA> DONE:  98%|█████████▊| 8412/8619 [00:10<00:00, 1039.78it/s]<LAMBDA> DONE:  99%|█████████▉| 8516/8619 [00:10<00:00, 1020.99it/s]<LAMBDA> DONE: 100%|██████████| 8619/8619 [00:10<00:00, 1001.29it/s]<LAMBDA> DONE: 100%|██████████| 8619/8619 [00:10<00:00, 832.57it/s] 
+
+real	45m14.176s
+user	646m41.454s
+sys	1m42.780s

@@ -14,9 +14,9 @@
 module purge
 module load ecCodes
 module load Anaconda3
-conda deactivate
-conda deactivate
-eval "$(conda shell.bash hook)"
-source activate xgb
+# conda deactivate
+# conda deactivate
+# eval "$(conda shell.bash hook)"
+# source activate xgb
 
 time python "$@"

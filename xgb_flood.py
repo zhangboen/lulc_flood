@@ -16,6 +16,8 @@ import argparse
 from src.utils import check_GPU, LogTrans, InvLogTrans, aleplot_1D_continuous, pdpplot_1D_continuous, undersample
 import multiprocessing as mp
 import statsmodels.api as sm
+import lmoments3 as lm
+from lmoments3 import distr
 
 # check if GPU is available
 GPU = check_GPU()
@@ -31,10 +33,11 @@ def get_args() -> Dict:
         Dictionary containing the run config.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fname', type=str, required=True, help='Input filename for modelling')
-    parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "pdp", "cv_pdp", "cv_ale", "importance", "sensitivity"])
+    parser.add_argument('--target', type=str, required=True, choices=['Qmax7', 'Qmin7'])
+    parser.add_argument('--fname', type=str, help='Input filename for modelling')
+    parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "pdp", "importance", "sensitivity", "real_sensitivity"])
     parser.add_argument('--mode', type=str, default='onlyUrban', choices=["noLULC", "onlyUrban", "all"])
-    parser.add_argument('--seed', type=int, required=False, help="Random seed")
+    parser.add_argument('--seed', type=int, help="Random seed")
     parser.add_argument('--feature', type=str, 
                         default='ImperviousSurface', 
                         choices=['ImperviousSurface', 'forest', 'crop', 'grass', 'water', 'wetland'], 
@@ -46,7 +49,7 @@ def get_args() -> Dict:
     parser.add_argument('--n_iter', type=int, default=100, help='Number of iteration in RandomizedSearchCV')
 
     # args related to ALE/PDP/SHAP
-    parser.add_argument('--n_inter', type=int, default=100, help='Number of ML interpretation based on ALE/PDP/SHAP')
+    parser.add_argument('--n_explain', type=int, default=100, help='Number of ML interpretation based on ALE/PDP/SHAP')
     parser.add_argument('--min_interval', type=float, default=0, help='Minimum interval of bins for calculating ALE/PDP')
     parser.add_argument('--even', action=argparse.BooleanOptionalAction, default=False, help='Whether use an dataframe with an evenly distributed feature value to calculate ALE/PDP')
     
@@ -73,9 +76,9 @@ def get_args() -> Dict:
                         help='Land-cover name')
     cfg = vars(parser.parse_args())
 
-    # get target of this model
-    target = os.path.basename(cfg['fname']).split('_')[0]
-    cfg['target'] = target
+    # get file path
+    target = cfg['target']
+    cfg['fname'] = f'../data/{target}_final_dataset_seasonal4.pkl'
 
     # get device name: cuda or cpu
     if cfg['gpu']:
@@ -322,88 +325,6 @@ def cv_func(cfg):
     ).reset_index()
     df_sta.to_csv(cfg["run_dir"] / f'{model}_{mode}_cv10_station_based_result.csv', index = False)
 
-def effect_func(cfg):
-    #################################################################################################
-    #         ALE or PDP estimation
-    #################################################################################################
-    from sklearn.inspection import partial_dependence
-
-    model = cfg["model"]
-    purpose = cfg['purpose']
-    feature = cfg['feature']
-    mode = cfg['mode']
-    min_interval = float(cfg['min_interval'])
-    even = cfg['even']
-
-    # load saved model
-    ml = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_model.pkl', 'rb'))
-    param_dict = ml.get_params()
-    param_dict['device'] = cfg['device']
-    ml = xgb.XGBRegressor(**param_dict)
-    
-    # load data
-    df, X, y, cfg = load_data(cfg)
-
-    # refit model
-    ml.fit(X, y)
-
-    # downsample to make a even dataset
-    if even:
-        df = undersample(df, feature)
-
-    predictors = cfg['predictors']
-    if feature not in predictors:
-        raise Exception('feature of interest is not included in the predictors')
-
-    res_df_all = []
-    for climate in df.climate_label.unique():
-        train_set_rep = df.loc[df.climate_label==climate,:]
-        if cfg["purpose"] == 'ale':
-            res_df = aleplot_1D_continuous(
-                train_set_rep, predictors, ml, feature, grid_size = 100, 
-                log = cfg['log'], m3s = cfg['m3s'], monte_carlo = 100, monte_ratio = 0.1, min_interval = min_interval,
-            )
-        elif cfg["purpose"] == 'pdp':
-            train_set_rep = df.loc[df.climate_label==climate,predictors]
-            idx = predictors.index(feature)
-            # res_df = partial_dependence(ml, train_set_rep, [idx], kind = 'average')
-            res_df = pdpplot_1D_continuous(
-                train_set_rep, predictors, ml, feature, grid_size = 100,
-                log = cfg['log'], m3s = cfg['m3s'], monte_carlo = 100, monte_ratio = 0.1, min_interval = min_interval,
-            )
-            
-            # # Extract values
-            # try:
-            #     feature_values = res_df['values'][0]
-            # except:
-            #     feature_values = res_df['grid_values'][0]
-            # avg_predictions = res_df['average'][0]
-
-            # # back-transform and centeralize
-            # if cfg['log']:
-            #     avg_predictions = np.exp(avg_predictions)
-            # avg_predictions = avg_predictions - avg_predictions[0]
-
-            # # Convert to DataFrame for inspection
-            # res_df = pd.DataFrame({
-            #     feature: feature_values,
-            #     'eff': avg_predictions
-            # })
-            # # divide by average prediction to interpret PDP in percentage terms
-            # if cfg['log']:
-            #     baseline = np.mean(np.exp(ml.predict(train_set_rep[predictors])))
-            # else:
-            #     baseline = np.mean(ml.predict(train_set_rep[predictors]))
-            # res_df['eff'] = res_df['eff'] / baseline * 100
-        res_df['climate'] = climate
-        res_df_all.append(res_df)
-    res_df_all = pd.concat(res_df_all).reset_index()
-
-    outName = cfg["run_dir"] / f'{model}_{mode}_{purpose}_{feature}_min_interval_{min_interval}.csv'
-    if even:
-        outName = str(outName)[:-4] + '_even.csv'
-    res_df_all.to_csv(outName, index = False)
-
 def importance_func(cfg):
     #################################################################################################
     #         Evaluate model performance with and without urban area in the ML
@@ -446,10 +367,7 @@ def importance_func(cfg):
         df_out = df[['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','Q']+['pred'+str(i) for i in range(nn)]]
         df_out.to_csv(cfg["run_dir"] / f'{model}_{mode}_importance_run{nn}_{feature}.csv', index = False)
 
-def cv_effect_raw_func(cfg, df, y, ml):
-    # five-fold cross-validated ALE/PDP
-    fold = 5  
-
+def effect_raw_func(df, cfg, ml, group, n_explain0, fold = 5):
     # split dataframe into 5 splits for each climate region 
     df['split'] = 1
     kf = KFold(n_splits = fold, shuffle = True)
@@ -459,149 +377,72 @@ def cv_effect_raw_func(cfg, df, y, ml):
             idx = df0.iloc[test_idx,:].index.values
             df.loc[df.index.isin(idx),'split'] = i+1
 
+    y = df['Q'].astype(np.float32).values
+    if cfg['log'] == True and cfg['m3s'] == True:
+        raise Exception('log and m3s cannot be both True')
+    elif cfg['log'] == True and cfg['m3s'] == False:
+        y = LogTrans(y, darea = df['gritDarea'].values, addition = 0.1, log = True)
+    elif cfg['log'] == False and cfg['m3s'] == False:
+        y = y
+
     # index of ImperviousSurface for PDP calculation
     predictors = cfg['predictors']
     index_pdp = predictors.index(cfg['feature'])
 
     # cross-validated ALE/PDP
     res_df_all = []
-    for i in range(fold):
-        X_train = df.loc[df.split!=i+1,predictors]
+    for split_id in range(1, fold+1):
+        X_train = df.loc[df.split!=split_id,cfg['predictors']]
         idx = X_train.index.values
         y_train = y[idx]
 
         # refit model
+        if cfg['gpu']:
+            X_train = cp.array(X_train.values)
         ml.fit(X_train, y_train)
-        print(f'Finish model fitting for fold {i}')
 
-        for climate in df.climate_label.unique():
-            train_set_rep = df.loc[(df.climate_label==climate)&(df.split==i+1),:]
-            if purpose == 'ale':
-                res_df = aleplot_1D_continuous(train_set_rep, predictors, ml, feature, grid_size = 100, log = cfg['log'], m3s = cfg['m3s'], min_interval = cfg['min_interval'])
-            elif purpose == 'pdp':
-                res_df = pdpplot_1D_continuous(train_set_rep, predictors, ml, feature, grid_size = 100, log = cfg['log'], m3s = cfg['m3s'], min_interval = cfg['min_interval'])
-                
-                # Extract values
-                try:
-                    feature_values = res_df['values'][0]
-                except:
-                    feature_values = res_df['grid_values'][0]
-                avg_predictions = res_df['average'][0]
-                
-                # back-transform and centeralize
-                if log:
-                    avg_predictions = np.exp(avg_predictions)
-                avg_predictions = avg_predictions - avg_predictions[0]
+        train_set_rep = df.loc[(df.split==split_id),:].reset_index()
+        res_df = aleplot_1D_continuous(train_set_rep, cfg['predictors'], ml, cfg['feature'], grid_size = 100, group=group, 
+                                        log = cfg['log'], m3s = cfg['m3s'], min_interval = cfg['min_interval'])
+        res_df_all.append(res_df)
+    res_df_all = pd.concat(res_df_all)
+    res_df_all['n_explain'] = n_explain0
+    return res_df_all
 
-                # Convert to DataFrame for inspection
-                res_df = pd.DataFrame({
-                    feature: feature_values,
-                    'eff': avg_predictions
-                })
-                # divide by average prediction to interpret PDP in percentage terms
-                if log:
-                    baseline = np.mean(np.exp(ml.predict(train_set_rep[predictors])))
-                else:
-                    baseline = np.mean(ml.predict(train_set_rep[predictors]))
-                res_df['eff'] = res_df['eff'] / baseline * 100
-            res_df['climate'] = climate
-            res_df['fold'] = i
-            res_df_all.append(res_df)
-            print(f'Finish calculating {purpose} for fold {i} in {climate}')
-    res_df_all = pd.concat(res_df_all).reset_index()
-
-def cv_effect_func(cfg):
+def effect_func(cfg):
     #################################################################################################
     #         Cross-validate ALE or PDP: e.g., Use the 80% gauges for each climate to train model
     #         Use the remaining 20% gauges to calculate ALE; repeat this five times
     #################################################################################################
     mode = cfg['mode']
     predictors = cfg['meteo_name'] + cfg['lulc_name'] + cfg['attr_name']
-    GPU = cfg['gpu']
     run_dir = cfg['run_dir']
     model = cfg['model']
-    log = cfg['log']
-    m3s = cfg['m3s']
     device = cfg['device']
     feature = cfg['feature']
     purpose = cfg['purpose']
     min_interval = float(cfg['min_interval'])
-    n_inter = int(cfg['n_inter'])
-
-    # load data
-    df, X, y, cfg = load_data(cfg)
-
-    # load saved model
-    ml = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_model.pkl', 'rb'))
-    param_dict = ml.get_params()
-    param_dict['device'] = device
-    ml = xgb.XGBRegressor(**param_dict)
+    n_explain = int(cfg['n_explain'])
     
     if feature not in predictors:
         raise Exception('feature of interest is not included in the predictors')
     
-    fold = 5  # five-fold cross-validated ALE/PDP
+    df, _, _, cfg = load_data(cfg)
 
-    for n_inter0 in range(n_inter):
-        # split dataframe into 5 splits for each climate region 
-        df['split'] = 1
-        kf = KFold(n_splits = fold, shuffle = True, random_state = cfg['seed'])
-        for climate in df.climate_label.unique():
-            df0 = df.loc[df.climate_label==climate,:]
-            for i,(train_idx, test_idx) in enumerate(kf.split(df0)):
-                idx = df0.iloc[test_idx,:].index.values
-                df.loc[df.index.isin(idx),'split'] = i+1
+    ml = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_model.pkl', 'rb'))
+    param_dict = ml.get_params()
+    param_dict['device'] = cfg['device']
+    ml = xgb.XGBRegressor(**param_dict)
 
-        # index of ImperviousSurface for PDP calculation
-        index_pdp = predictors.index(feature)
-
-        # cross-validated ALE
-        res_df_all = []
-        for i in range(fold):
-            X_train = df.loc[df.split!=i+1,predictors]
-            idx = X_train.index.values
-            y_train = y[idx]
-
-            # refit model
-            ml.fit(X_train, y_train)
-            print(f'Finish model fitting for fold {i}')
-
-            for climate in df.climate_label.unique():
-                train_set_rep = df.loc[(df.climate_label==climate)&(df.split==i+1),:]
-                if purpose == 'cv_ale':
-                    res_df = aleplot_1D_continuous(train_set_rep, predictors, ml, feature, grid_size = 100, log = log, m3s = m3s, min_interval = min_interval)
-                elif purpose == 'cv_pdp':
-                    res_df = pdpplot_1D_continuous(train_set_rep, predictors, ml, feature, grid_size = 100, log = log, m3s = m3s, min_interval = min_interval)
-                    
-                    # Extract values
-                    try:
-                        feature_values = res_df['values'][0]
-                    except:
-                        feature_values = res_df['grid_values'][0]
-                    avg_predictions = res_df['average'][0]
-                    
-                    # back-transform and centeralize
-                    if log:
-                        avg_predictions = np.exp(avg_predictions)
-                    avg_predictions = avg_predictions - avg_predictions[0]
-
-                    # Convert to DataFrame for inspection
-                    res_df = pd.DataFrame({
-                        feature: feature_values,
-                        'eff': avg_predictions
-                    })
-                    # divide by average prediction to interpret PDP in percentage terms
-                    if log:
-                        baseline = np.mean(np.exp(ml.predict(train_set_rep[predictors])))
-                    else:
-                        baseline = np.mean(ml.predict(train_set_rep[predictors]))
-                    res_df['eff'] = res_df['eff'] / baseline * 100
-                res_df['climate'] = climate
-                res_df['fold'] = i
-                res_df_all.append(res_df)
-                print(f'Finish calculating {purpose} for fold {i} in {climate}')
-        res_df_all = pd.concat(res_df_all).reset_index()
-        res_df_all.to_csv(cfg["run_dir"] / f'{model}_{mode}_{purpose}_{feature}_min_interval_{min_interval}.csv', index = False)
+    # repeat cross-validated ALE/PDP for n_explain times
+    df_out = []
+    group = 'climate_label'
+    for n_explain0 in tqdm(range(n_explain)):
+        df0 = effect_raw_func(df, cfg, ml, group, n_explain0, fold = 5)
+        df0['n_explain'] = n_explain0
+        df_out.append(df0)
+    df_out = pd.concat(df_out)
+    df_out.to_csv(cfg["run_dir"] / f'{model}_{mode}_{purpose}_{feature}_min_interval_{min_interval}.csv', index = False)
 
 def lowess_func(par, frac = 0.666):
     sample_df, xvals, i = par
@@ -609,7 +450,7 @@ def lowess_func(par, frac = 0.666):
     out = pd.DataFrame({'feature':xvals,'shap'+str(i):lowess1}).set_index('feature')
     return out
 
-def shap_func(cfg, lowess = False):
+def shap_func(cfg, lowess = False, fold = 5):
     #################################################################################################
     #         SHAP analysis
     #################################################################################################
@@ -632,62 +473,29 @@ def shap_func(cfg, lowess = False):
     param_dict['device'] = device
     ml = xgb.XGBRegressor(**param_dict)
     
-    # refit model
-    ml.fit(X, y)
+    shap_values = np.zeros(X.shape, dtype=np.float32)
+    shap_interaction_values = np.zeros((X.shape[0], X.shape[1], X.shape[1]), dtype=np.float32)
 
-    # calculate shap values
-    if not os.path.exists(cfg["run_dir"] / f'{model}_{mode}_shap_explainer.pkl') or not os.path.exists(cfg["run_dir"] / f'{model}_{mode}_shap_values.pkl'):
+    seed = int(np.random.uniform(low=0, high=1e6))
+    kf = KFold(n_splits = fold, shuffle = True, random_state = seed)
+    for j,(train_idx, test_idx) in enumerate(kf.split(df)):
+        X_train = cp.array(df.iloc[train_idx,:][predictors])
+        y_train = y[train_idx]
+        X_test = cp.array(df.iloc[test_idx,:][predictors])
+
+        # refit model
+        ml.fit(X_train, y_train)
+
+        # calculate shap values
         explainer = shap.TreeExplainer(ml)
-        shap_values = explainer.shap_values(X, check_additivity = False)
+        shap_values0 = explainer.shap_values(X_test, check_additivity = False)
+        shap_interaction_values0 = explainer.shap_interaction_values(X_test)
 
-        pickle.dump(explainer, open(cfg["run_dir"] / f'{model}_{mode}_shap_explainer.pkl','wb'))
-        pickle.dump(shap_values, open(cfg["run_dir"] / f'{model}_{mode}_shap_values.pkl','wb'))
-    else:
-        explainer = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_shap_explainer.pkl','rb'))
-
-    # if not os.path.exists(cfg["run_dir"] / f'{model}_{mode}_shap_interaction_values.pkl'):
-    shap_interaction_values0 = explainer.shap_interaction_values(X)
-    pickle.dump(shap_interaction_values0, open(cfg["run_dir"] / f'{model}_{mode}_shap_interaction_values.pkl','wb'))
-
-    # estimate LOWESS line in SHAP dependence plots for dry and wet catchments, respectively
-    if lowess:
-        shap_values = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_shap_values.pkl','rb'))
-        
-        if not os.path.exists(cfg["run_dir"] / f'{model}_{mode}_shap_lowess_{feature}_dry_wet.csv'):
-            idx = predictors.index(feature)
-
-            if GPU:
-                X0 = cp.asnumpy(X)
-            else:
-                X0 = X
-
-            tmp = pd.DataFrame({
-                'aridity':df.aridity.values,
-                'feature':X0[:,idx],
-                'shap':shap_values[:,idx]
-            })
-            tmp['catch'] = np.where(tmp.aridity.values <= 0.65, 'dry', 'wet')
-            
-            n_boot = 50
-
-            df_out = []
-            for catch in ['dry','wet']:
-                df1 = tmp.loc[tmp.catch == catch,:].drop(columns=['aridity'])
-                xvals = np.linspace(df1.feature.min(), df1.feature.max(), 100)
-                lowess0 = sm.nonparametric.lowess(df1['shap'].values, df1['feature'].values, xvals=xvals, frac=0.5, return_sorted = True)   
-                lowess0 = pd.DataFrame({'feature':xvals,'shap':lowess0}).set_index('feature')
-
-                # bootstrap
-                pool = mp.Pool(cfg['num_workers'])
-                pars = [[df1.sample(frac=0.1, replace=True), ss, xvals] for ss in range(n_boot)]
-                boot_lowess = list(tqdm(pool.imap(lowess_func, pars), total=n_boot))
-                boot_lowess = pd.concat(boot_lowess, axis = 1)
-
-                lowess0 = pd.concat([lowess0, boot_lowess], axis = 1).reset_index()
-                lowess0['catch'] = catch
-                df_out.append(lowess0)
-            df_out = pd.concat(df_out)
-            df_out.to_csv(cfg["run_dir"] / f'{model}_{mode}_shap_lowess_{feature}_dry_wet.csv', index = False)
+        shap_values[test_idx,:] = shap_values0
+        shap_interaction_values[test_idx,:,:] = shap_interaction_values0
+    
+    pickle.dump(shap_values, open(cfg["run_dir"] / f'{model}_{mode}_shap_values_explain_{seed}.pkl','wb'))
+    pickle.dump(shap_interaction_values, open(cfg["run_dir"] / f'{model}_{mode}_shap_interaction_values_explain_{seed}.pkl','wb'))
 
 def sensitivity_func(cfg):
     #################################################################################################
@@ -737,8 +545,89 @@ def sensitivity_func(cfg):
         comp = np.exp(comp)
     diff = (comp - base) / base * 100
     df['diff'] = diff
-    df = df[['ohdb_id',target+'date','diff']]
+    df['base'] = base
+    df['future'] = comp
+    df = df[['ohdb_id', target+'date', 'base', 'future', 'diff']]
     df.to_csv(cfg["run_dir"] / f'{model}_{mode}_{purpose}_+0{delta_feature}{feature}_diff_in_percentage.csv', index = False)
+
+def fit_gev_lmoments(x):
+    # Calculate the first few L-moments
+    # By default, lmoments() calculates L1, L2, L3, L4 (or upto 4 if not specified)
+    paras = distr.gev.lmom_fit(x)
+    fitted_gev = distr.gev(**paras)
+    return lambda xx:fitted_gev.cdf(xx)
+
+def real_sensitivity_func(cfg):
+    #####################################################################################################
+    #         Realistic-scenario sensitivity analysis: Add impervious surface by different SSP scenarios
+    #         We used the urban projection datasets from Gao et al., 2021 Nature communications paper
+    #         We calculated the difference between 2010 (base year) and 2100, and added this difference to
+    #         the dataframe
+    #####################################################################################################
+    mode = cfg['mode']
+    predictors = cfg['meteo_name'] + cfg['lulc_name'] + cfg['attr_name']
+    GPU = cfg['gpu']
+    run_dir = cfg['run_dir']
+    model = cfg['model']
+    log = cfg['log']
+    m3s = cfg['m3s']
+    device = cfg['device']
+    feature = cfg['feature']
+    target = cfg['target']
+
+    # load data
+    df, X, y, cfg = load_data(cfg)
+
+    # load saved model
+    ml = pickle.load(open(cfg["run_dir"] / f'{model}_{mode}_model.pkl', 'rb'))
+    param_dict = ml.get_params()
+    param_dict['device'] = device
+    ml = xgb.XGBRegressor(**param_dict)
+    
+    # refit model and make predictions
+    ml.fit(X, y)
+    print('Finish model fitting')
+    base = ml.predict(X)
+    if log:
+        base = np.exp(base)
+    df['base'] = base
+
+    # add urban area by 10% for each location
+    if GPU:
+        X = cp.asnumpy(X)
+    
+    idx = predictors.index(feature)
+
+    # read urban projections based on different SSPs
+    for ssp in ['ssp1','ssp2','ssp3','ssp4','ssp5']:
+        df_2010 = pd.read_csv(f'../data_urban_projection/{ssp}_2010.csv')
+        df_2100 = pd.read_csv(f'../data_urban_projection/{ssp}_2100.csv')
+
+        df_2010 = df_2010[df_2010.columns[df_2010.columns.str.contains('OHDB')].tolist()+['stat']].set_index('stat').T.loc[:,['mean']]
+        df_2100 = df_2100[df_2100.columns[df_2100.columns.str.contains('OHDB')].tolist()+['stat']].set_index('stat').T.loc[:,['mean']]
+
+        df_diff = pd.merge(df_2010.reset_index(), df_2100.reset_index(), on = 'index', suffixes = ('_2010', '_2100'))
+        df_diff = df_diff.rename(columns={'index':'ohdb_id'})
+
+        df_diff['diff'] = df_diff['mean_2100'] * 100 - df_diff['mean_2010'] * 100
+        df_diff = df_diff.dropna()
+
+        X0 = X.copy()
+        if GPU:
+            X0 = pd.DataFrame(data = X0, columns = predictors)
+        X0 = pd.concat([X0,df[['ohdb_id']]], axis = 1).merge(df_diff[['ohdb_id','diff']], on = 'ohdb_id')
+        X0[feature] = X0[feature] + X0['diff']
+        X0 = X0[predictors]
+
+        if GPU:
+            X0 = cp.array(X0)
+        comp = ml.predict(X0)
+        if log:
+            comp = np.exp(comp)
+        df['future_'+ssp] = comp
+        print('Finish calculating ', ssp)
+    df = df[['ohdb_id', target+'date', 'base']+['future_'+b for b in ['ssp1','ssp2','ssp3','ssp4','ssp5']]]
+    df.to_csv(cfg["run_dir"] / f'{model}_{mode}_{purpose}_{feature}_diff_in_percentage.csv', index = False)
 
 def ale_time_func(cfg):
     #################################################################################################
@@ -990,9 +879,16 @@ if __name__ == "__main__":
     
         # update old args using new args
         for k,v in user_cfg.items():
-            if v != config[k] and k not in ['lulc_name','meteo_name','attr_name']: # update only attributes that are different and no these three attributes
-                user_cfg[k] = config[k]
+            if k in config.keys():
+                if v != config[k] and k not in ['lulc_name','meteo_name','attr_name']: # update only attributes that are different and no these three attributes
+                    user_cfg[k] = config[k]
+
+        # add new args
+        for k,v in config.items():
+            if k not in user_cfg:
+                user_cfg[k] = v
         config = user_cfg
+
     else:
         # setup modelling folder
         config = _setup_run(config)
@@ -1003,9 +899,7 @@ if __name__ == "__main__":
 
     purpose = config['purpose']
     # processing
-    if purpose == 'cv_pdp' or purpose == 'cv_ale':
-        purpose = 'cv_effect_func'
-    elif purpose == 'pdp' or purpose == 'ale':
+    if purpose == 'pdp' or purpose == 'ale':
         purpose = 'effect_func'
     else:
         purpose = purpose + '_func'

@@ -1,4 +1,4 @@
-# module load UDUNITS; module load GDAL; module load R/4.3.2-gfbf-2023a
+# module load UDUNITS; module load GDAL/3.7.1-foss-2023a-spatialite; module load R/4.3.2-gfbf-2023a
 # Rscript --no-restore --no-save calc_GRIT_catch_ave_MSWEP_1.r prName, shpName
 library(conflicted)
 library(sf)
