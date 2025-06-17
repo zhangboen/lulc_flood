@@ -40,33 +40,43 @@ diff_Qmax7 = pd.read_pickle(cfg_Qmax7['fname']).merge(diff_Qmax7, on = ['ohdb_id
 
 # calculate diff
 for ssp in ['ssp1','ssp2','ssp3','ssp4','ssp5']:
-    diff_Qmin7['diff_'+ssp] = ( diff_Qmin7['future_'+ssp] - diff_Qmin7['base'] ) / diff_Qmin7['base'] * 100
-    diff_Qmax7['diff_'+ssp] = ( diff_Qmax7['future_'+ssp] - diff_Qmax7['base'] ) / diff_Qmax7['base'] * 100
+    diff_Qmin7['Qmin7_diff_'+ssp] = ( diff_Qmin7['Qmin7_'+ssp] - diff_Qmin7['Qmin7_base'] ) / diff_Qmin7['Qmin7_base'] * 100
+    diff_Qmax7['Qmax7_diff_'+ssp] = ( diff_Qmax7['Qmax7_'+ssp] - diff_Qmax7['Qmax7_base'] ) / diff_Qmax7['Qmax7_base'] * 100
 
 cols = ['diff_'+b for b in ['ssp1','ssp2','ssp3','ssp4','ssp5']]
 diff_Qmin7_ave = diff_Qmin7.groupby(['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']).agg(
-    SSP1 = ('diff_ssp1', lambda x:x.mean()),
-    SSP2 = ('diff_ssp2', lambda x:x.mean()),
-    SSP3 = ('diff_ssp3', lambda x:x.mean()),
-    SSP4 = ('diff_ssp4', lambda x:x.mean()),
-    SSP5 = ('diff_ssp5', lambda x:x.mean()),
-    p_ssp1 = ('diff_ssp1', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp2 = ('diff_ssp2', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp3 = ('diff_ssp3', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp4 = ('diff_ssp4', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp5 = ('diff_ssp5', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    Qmin7_1 = ('Qmin7_diff_ssp1', lambda x:x.mean()),
+    Qmin7_2 = ('Qmin7_diff_ssp2', lambda x:x.mean()),
+    Qmin7_3 = ('Qmin7_diff_ssp3', lambda x:x.mean()),
+    Qmin7_4 = ('Qmin7_diff_ssp4', lambda x:x.mean()),
+    Qmin7_5 = ('Qmin7_diff_ssp5', lambda x:x.mean()),
+    urban1 = ('urban_diff_ssp1', lambda x:x.mean()),
+    urban2 = ('urban_diff_ssp2', lambda x:x.mean()),
+    urban3 = ('urban_diff_ssp3', lambda x:x.mean()),
+    urban4 = ('urban_diff_ssp4', lambda x:x.mean()),
+    urban5 = ('urban_diff_ssp5', lambda x:x.mean()),
+    p_ssp1 = ('Qmin7_diff_ssp1', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp2 = ('Qmin7_diff_ssp2', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp3 = ('Qmin7_diff_ssp3', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp4 = ('Qmin7_diff_ssp4', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp5 = ('Qmin7_diff_ssp5', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
 ).reset_index()
 diff_Qmax7_ave = diff_Qmax7.groupby(['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']).agg(
-    SSP1 = ('diff_ssp1', lambda x:x.mean()),
-    SSP2 = ('diff_ssp2', lambda x:x.mean()),
-    SSP3 = ('diff_ssp3', lambda x:x.mean()),
-    SSP4 = ('diff_ssp4', lambda x:x.mean()),
-    SSP5 = ('diff_ssp5', lambda x:x.mean()),
-    p_ssp1 = ('diff_ssp1', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp2 = ('diff_ssp2', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp3 = ('diff_ssp3', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp4 = ('diff_ssp4', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
-    p_ssp5 = ('diff_ssp5', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    Qmax7_1 = ('Qmax7_diff_ssp1', lambda x:x.mean()),
+    Qmax7_2 = ('Qmax7_diff_ssp2', lambda x:x.mean()),
+    Qmax7_3 = ('Qmax7_diff_ssp3', lambda x:x.mean()),
+    Qmax7_4 = ('Qmax7_diff_ssp4', lambda x:x.mean()),
+    Qmax7_5 = ('Qmax7_diff_ssp5', lambda x:x.mean()),
+    urban1 = ('urban_diff_ssp1', lambda x:x.mean()),
+    urban2 = ('urban_diff_ssp2', lambda x:x.mean()),
+    urban3 = ('urban_diff_ssp3', lambda x:x.mean()),
+    urban4 = ('urban_diff_ssp4', lambda x:x.mean()),
+    urban5 = ('urban_diff_ssp5', lambda x:x.mean()),
+    p_ssp1 = ('Qmax7_diff_ssp1', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp2 = ('Qmax7_diff_ssp2', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp3 = ('Qmax7_diff_ssp3', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp4 = ('Qmax7_diff_ssp4', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
+    p_ssp5 = ('Qmax7_diff_ssp5', lambda x: stats.ttest_1samp(x, 0, alternative='two-sided').pvalue),
 ).reset_index()
 
 # change due to urbanization under SSP5
@@ -79,7 +89,7 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     df = eval('diff_'+name+'_ave')
     lons = df.ohdb_longitude.values
     lats = df.ohdb_latitude.values
-    vals = df['SSP5'].values
+    vals = df[f'{name}_5'].values
 
     if i == 0:
         vmin, vmax, vind = -40, 40, 4
@@ -101,16 +111,16 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     # add boxplot to show the impact for dry (AI<1) and wet (AI>1) catchments
     df['tmp'] = np.where(df['aridity']>0.65, 'wet', 'dry')
     
-    ttest = stats.ttest_ind(df.loc[df.tmp=='wet','SSP5'].values, df.loc[df.tmp=='dry','SSP5'].values)
+    ttest = stats.ttest_ind(df.loc[df.tmp=='wet',f'{name}_5'].values, df.loc[df.tmp=='dry',f'{name}_5'].values)
 
     print('fraction of significant gauges:', df.loc[df.p_ssp5<=0.05,:].shape[0] / df.shape[0] * 100)
-    print('average diff of significant gauges:', df.loc[df.p_ssp5<=0.05,'SSP5'].mean())
-    print(df.loc[df.tmp=='wet','SSP5'].mean(), df.loc[df.tmp=='wet','SSP5'].std())
-    print(df.loc[df.tmp=='dry','SSP5'].mean(), df.loc[df.tmp=='dry','SSP5'].std())
+    print('average diff of significant gauges:', df.loc[df.p_ssp5<=0.05,f'{name}_5'].mean())
+    print(df.loc[df.tmp=='wet',f'{name}_5'].mean(), df.loc[df.tmp=='wet',f'{name}_5'].std())
+    print(df.loc[df.tmp=='dry',f'{name}_5'].mean(), df.loc[df.tmp=='dry',f'{name}_5'].std())
     
     axin = ax.inset_axes([0.08, .05, .1, .3])
     sns.boxplot(df.loc[df.p_ssp5<=0.01,:], 
-                x = 'tmp', y = 'SSP5', ax = axin, 
+                x = 'tmp', y = f'{name}_5', ax = axin, 
                 showfliers = False, width = .7, 
                 whis = [5, 95],
                 color = '#c2dcea',
@@ -133,21 +143,78 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     axin.spines["top"].set_visible(False) 
     axin.spines["right"].set_visible(False) 
 
-# changes under different SSPs
-ax3 = ax1.inset_axes([1.1, .1, .4, .9])
-ax4 = ax2.inset_axes([1.1, .1, .4, .9])
+# scatters between urban expansion fractions and streamflow extremes change under SSP5
+ax3 = ax1.inset_axes([1.1, .1, .5, .8])
+ax4 = ax2.inset_axes([1.1, .1, .5, .8])
 for i,name in enumerate(['Qmin7','Qmax7']):
     ax0 = [ax3,ax4][i]
     df0 = eval('diff_'+name+'_ave')
+    df0['catch'] = np.where(df0['aridity']>0.65, 'Catchments in wet climate', 'Catchments in dry climate')
+    palette0 = {'Catchments in wet climate':"#65C2A5",'Catchments in dry climate':'#C7B18A'}
+    sns.scatterplot(data = df0, 
+                    x = 'urban5', 
+                    y = f'{name}_5', 
+                    hue = 'catch', 
+                    alpha = .3,
+                    palette = palette0,
+                    legend = False,
+                    ax = ax0)
+    for catch0 in df0.catch.unique():
+        sns.regplot(df0.loc[df0.catch==catch0,:],
+                    x = 'urban5',
+                    y = f'{name}_5', 
+                    scatter = False,
+                    color = palette0[catch0],
+                    ax = ax0, 
+                    line_kws={"lw": 2},
+                    robust=True
+                   )
     
-    df0 = df0.melt(id_vars = ['ohdb_id','aridity'], value_vars = ['SSP1','SSP2','SSP3','SSP4','SSP5'])
-
-    palette = {'SSP1':'#169ac8','SSP2':'#17266d','SSP3':'#d8c036','SSP4':'#d87b36','SSP5':'#a01d09'}
-    sns.scatterplot(data = df0, x = 'aridity', y = 'value', hue = 'variable', ax = ax0, palette = palette, markerscale = 2, fontsize = 11)
-    sns.move_legend(ax0, 'upper right', title = None)
-    ax0.set_xlabel('Catchment aridity', fontsize = 10)
+    # legend
+    line1 = Line2D([], [], color=palette0['Catchments in dry climate'], ls="-", linewidth=1.5)
+    line2 = Line2D([], [], color=palette0['Catchments in wet climate'], ls="-", linewidth=1.5)
+    sc1 = plt.scatter([],[], s=15, facecolors=palette0['Catchments in dry climate'], edgecolors=palette0['Catchments in dry climate'])
+    sc2 = plt.scatter([],[], s=15, facecolors=palette0['Catchments in wet climate'], edgecolors=palette0['Catchments in wet climate'])
+    ax0.legend([(sc1,line1), (sc2,line2)], ['Catchments in dry climate','Catchments in wet climate'], numpoints=1, handlelength = 1, fontsize = 9)
+    
+    ax0.set_xlabel('Urban expansion (%)', fontsize = 10)
     ax0.set_ylabel(f'{name} in $\Delta$%', fontsize = 10)
     ax0.tick_params(axis = 'both', labelsize = 10)
+    ax0.set_ylim(-50, df0[f'{name}_5'].quantile(.999))
+
+    # add upper and right axes to plot data distribution
+    ax_upper = ax0.inset_axes([0, 1.01, 1, .1])
+    ax_right = ax0.inset_axes([1.01, 0, .1, 1])
+    sns.boxplot(data = df0, 
+                x = 'urban5', 
+                ax=ax_upper, 
+                hue = 'catch', 
+                legend = False, 
+                palette = palette0, 
+                showfliers = False, 
+                whis = (2.5, 97.5),
+                capprops = dict(linewidth=0), 
+                width = 1)
+    sns.boxplot(data = df0, 
+                y = f'{name}_5', 
+                ax=ax_right, 
+                hue = 'catch', 
+                legend = False, 
+                whis = (2.5, 97.5),
+                palette = palette0, 
+                showfliers = False, 
+                capprops = dict(linewidth=0), 
+                width = 1)
+
+    ax_right.set_ylim(ax0.get_ylim())
+    ax_upper.set_xlim(ax0.get_xlim())
+    ax_upper.xaxis.label.set_visible(False)
+    ax_right.yaxis.label.set_visible(False)
+    for side in ['top','right','bottom','left']:
+        ax_right.spines[side].set_visible(False)
+        ax_upper.spines[side].set_visible(False)
+    ax_right.tick_params(axis='both',which='both',labelleft=False,bottom=False,left=False,right=False,top=False)
+    ax_upper.tick_params(axis='both',which='both',labelbottom=False,bottom=False,left=False,right=False,top=False)
 
 # add subplot order
 fig.text(.15, .9, 'a', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)

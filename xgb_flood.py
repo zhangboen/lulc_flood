@@ -10,14 +10,13 @@ from sklearn.metrics import make_scorer
 import pickle
 import shap
 from datetime import datetime
-from pathlib import Path
 from tqdm import tqdm
 import argparse
 from src.utils import check_GPU, LogTrans, InvLogTrans, aleplot_1D_continuous, pdpplot_1D_continuous, undersample
 import multiprocessing as mp
 import statsmodels.api as sm
-import lmoments3 as lm
-from lmoments3 import distr
+# import lmoments3 as lm
+# from lmoments3 import distr
 
 # check if GPU is available
 GPU = check_GPU()
@@ -33,7 +32,7 @@ def get_args() -> Dict:
         Dictionary containing the run config.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--target', type=str, required=True, choices=['Qmax7', 'Qmin7'])
+    parser.add_argument('--target', type=str, choices=['Qmax7', 'Qmin7'])
     parser.add_argument('--fname', type=str, help='Input filename for modelling')
     parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "pdp", "importance", "sensitivity", "real_sensitivity"])
     parser.add_argument('--mode', type=str, default='onlyUrban', choices=["noLULC", "onlyUrban", "all"])
@@ -77,6 +76,9 @@ def get_args() -> Dict:
     cfg = vars(parser.parse_args())
 
     # get file path
+    if cfg['target'] is None:
+        cfg['target'] = os.path.basename(cfg['fname']).split('_')[0]
+
     target = cfg['target']
     cfg['fname'] = f'../data/{target}_final_dataset_seasonal4.pkl'
 
@@ -611,22 +613,27 @@ def real_sensitivity_func(cfg):
 
         df_diff['diff'] = df_diff['mean_2100'] * 100 - df_diff['mean_2010'] * 100
         df_diff = df_diff.dropna()
+        df_diff = df_diff.rename(columns={'diff':'urban_diff','mean_2010':'urban_2010','mean_2100':'urban_2100'})
 
         X0 = X.copy()
         if GPU:
             X0 = pd.DataFrame(data = X0, columns = predictors)
-        X0 = pd.concat([X0,df[['ohdb_id']]], axis = 1).merge(df_diff[['ohdb_id','diff']], on = 'ohdb_id')
-        X0[feature] = X0[feature] + X0['diff']
-        X0 = X0[predictors]
+        X0 = pd.concat([X0,df[['ohdb_id']]], axis = 1).merge(df_diff[['ohdb_id','urban_diff']], on = 'ohdb_id')
+        X0[feature] = X0[feature] + X0['urban_diff']
+        X1 = X0[predictors].copy()
 
         if GPU:
-            X0 = cp.array(X0)
-        comp = ml.predict(X0)
+            X1 = cp.array(X1)
+        comp = ml.predict(X1)
         if log:
             comp = np.exp(comp)
-        df['future_'+ssp] = comp
+        df[f'{target}_'+ssp] = comp
+        df['urban_diff_'+ssp] = X0['urban_diff'].values
         print('Finish calculating ', ssp)
-    df = df[['ohdb_id', target+'date', 'base']+['future_'+b for b in ['ssp1','ssp2','ssp3','ssp4','ssp5']]]
+    df = df.rename(columns={'base':f'{target}_base'})
+    cols = ['ohdb_id', target+'date', f'{target}_base'] + [f'{target}_{b}' for b in ['ssp1','ssp2','ssp3','ssp4','ssp5']]
+    cols = cols + [f'urban_diff_{b}' for b in ['ssp1','ssp2','ssp3','ssp4','ssp5']]
+    df = df[cols]
     df.to_csv(cfg["run_dir"] / f'{model}_{mode}_{purpose}_{feature}_diff_in_percentage.csv', index = False)
 
 def ale_time_func(cfg):
@@ -880,7 +887,7 @@ if __name__ == "__main__":
         # update old args using new args
         for k,v in user_cfg.items():
             if k in config.keys():
-                if v != config[k] and k not in ['lulc_name','meteo_name','attr_name']: # update only attributes that are different and no these three attributes
+                if v != config[k] and k not in ['attr_name','meteo_name']:
                     user_cfg[k] = config[k]
 
         # add new args
