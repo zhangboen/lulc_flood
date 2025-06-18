@@ -19,7 +19,7 @@ predictors = cfg_Qmax7['meteo_name'] + cfg_Qmax7['lulc_name'] + cfg_Qmax7['attr_
 idx = predictors.index('ImperviousSurface')
 idx_smrz = predictors.index('smrz')
 
-def read(par):
+def read_inter(par):
     name, seed = par
     try:
         inter0 = pickle.load(open(eval('dir_'+name) / f'xgb_onlyUrban_shap_interaction_values_explain_{seed}.pkl', 'rb'))
@@ -42,12 +42,60 @@ def read(par):
     ]]
     return tmp
 
+def read_shap(par):
+    name, seed = par
+    try:
+        shap0 = pickle.load(open(eval('dir_'+name) / f'xgb_onlyUrban_shap_values_explain_{seed}.pkl', 'rb'))
+    except:
+        return
+    
+    tmp = pd.DataFrame(data = shap0, columns = predictors)
+
+    # interaction bewteen urban area and soil moisture
+    tmp['smrz_rank'] = tmp.abs().rank(1)['smrz'].values
+
+    tmp = tmp[[
+        'smrz',
+        'smrz_rank',
+    ]]
+    return tmp
+
 if __name__ == '__main__':
+    # calculate ensemble SHAP
+    name = 'Qmax7'
+    seeds = [str(s).split('_')[-1].split('.')[0] for s in dir_Qmax7.glob('*shap_values_explain_*pkl')]
+    if not os.path.exists(dir_Qmax7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl'):
+        with mp.Pool(12) as p:
+            df_Qmax7_shap = list(tqdm(p.imap(read_shap, [(name,seed) for seed in seeds])))
+        df_Qmax7_shap = [a for a in df_Qmax7_shap if a is not None]
+        df_Qmax7_shap = sum(df_Qmax7_shap) / len(df_Qmax7_shap)
+        tmp = pd.read_pickle(cfg_Qmax7['fname'])
+        df_Qmax7_shap = pd.concat([df_Qmax7_shap, tmp[['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']]], axis = 1)
+        df_Qmax7_shap = df_Qmax7_shap.groupby(['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']).mean().reset_index()
+        df_Qmax7_shap.to_pickle(dir_Qmax7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl')
+    else:
+        df_Qmax7_shap = pd.read_pickle(dir_Qmax7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl')
+
+    name = 'Qmin7'
+    seeds = [str(s).split('_')[-1].split('.')[0] for s in dir_Qmin7.glob('*shap_values_explain_*pkl')]
+    if not os.path.exists(dir_Qmin7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl'):
+        with mp.Pool(12) as p:
+            df_Qmin7_shap = list(tqdm(p.imap(read_shap, [(name,seed) for seed in seeds])))
+        df_Qmin7_shap = [a for a in df_Qmin7_shap if a is not None]
+        df_Qmin7_shap = sum(df_Qmin7_shap) / len(df_Qmin7_shap)
+        tmp = pd.read_pickle(cfg_Qmin7['fname'])
+        df_Qmin7_shap = pd.concat([df_Qmin7_shap, tmp[['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']]], axis = 1)
+        df_Qmin7_shap = df_Qmin7_shap.groupby(['ohdb_id','ohdb_longitude','ohdb_latitude','climate_label','aridity']).mean().reset_index()
+        df_Qmin7_shap.to_pickle(dir_Qmin7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl')
+    else:
+        df_Qmin7_shap = pd.read_pickle(dir_Qmin7 / 'xgb_onlyUrban_shap_values_explain_ensemble_mean.pkl')
+
+    # calculate ensemble SHAP interactions
     name = 'Qmax7'
     seeds = [str(s).split('_')[-1].split('.')[0] for s in dir_Qmax7.glob('*shap_interaction_values_explain_*pkl')]
     if not os.path.exists(dir_Qmax7 / 'xgb_onlyUrban_shap_interaction_values_explain_ensemble_mean.pkl'):
         with mp.Pool(12) as p:
-            df_Qmax7 = list(tqdm(p.imap(read, [(name,seed) for seed in seeds])))
+            df_Qmax7 = list(tqdm(p.imap(read_inter, [(name,seed) for seed in seeds])))
         df_Qmax7 = [a for a in df_Qmax7 if a is not None]
         df_Qmax7 = sum(df_Qmax7) / len(df_Qmax7)
         tmp = pd.read_pickle(cfg_Qmax7['fname'])
@@ -61,7 +109,7 @@ if __name__ == '__main__':
     seeds = [str(s).split('_')[-1].split('.')[0] for s in dir_Qmin7.glob('*shap_interaction_values_explain_*pkl')]
     if not os.path.exists(dir_Qmin7 / 'xgb_onlyUrban_shap_interaction_values_explain_ensemble_mean.pkl'):
         with mp.Pool(12) as p:
-            df_Qmin7 = list(tqdm(p.imap(read, [(name,seed) for seed in seeds])))
+            df_Qmin7 = list(tqdm(p.imap(read_inter, [(name,seed) for seed in seeds])))
         df_Qmin7 = [a for a in df_Qmin7 if a is not None]
         df_Qmin7 = sum(df_Qmin7) / len(df_Qmin7)
         tmp = pd.read_pickle(cfg_Qmin7['fname'])
@@ -71,11 +119,27 @@ if __name__ == '__main__':
     else:
         df_Qmin7 = pd.read_pickle(dir_Qmin7 / 'xgb_onlyUrban_shap_interaction_values_explain_ensemble_mean.pkl')
 
-    fig, axes = plt.subplots(2, 2, figsize = (8, 7))
+    fig, axes = plt.subplots(2, 3, figsize = (8, 7))
     for i,name in enumerate(['Qmin7', 'Qmax7']):
+        df0 = eval('df_'+name+'_shap')
+        df0['smrz_rank'] = len(predictors) - df0['smrz_rank']
+        ax = axes[i,0]
+        sns.ecdfplot(df0, 
+                    x = 'smrz_rank', 
+                    hue = 'climate_label', 
+                    lw = 2,
+                    ax = ax, 
+                    palette = palette)
+        ax.set_xlabel('Rank of SHAP values for soil moisture', fontsize = 11)
+        sns.move_legend(ax, 'upper left', title = None, fontsize = 11)
+        ax.text(-.15, 1, string.ascii_letters[(i+1)*2-2], 
+                weight = 'bold', transform = ax.transAxes, fontsize = 11)
+        ax.tick_params(axis = 'both', labelsize = 11)
+        ax.set_ylabel('Proportion', fontsize = 11)
+
         df1 = eval('df_'+name)
         df1['rank_urban_smrz'] = len(predictors) - df1['rank_urban_smrz']
-        ax = axes[i,0]
+        ax = axes[i,1]
         sns.ecdfplot(df1, 
                     x = 'rank_urban_smrz', 
                     hue = 'climate_label', 
@@ -89,7 +153,7 @@ if __name__ == '__main__':
         ax.tick_params(axis = 'both', labelsize = 11)
         ax.set_ylabel('Proportion', fontsize = 11)
         
-        ax2 = axes[i,1]
+        ax2 = axes[i,2]
         sns.regplot(df1, x = 'aridity', y = 'rank_urban_smrz', ax = ax2, line_kws={'color': 'red'}, robust = True)
         ax2.set_xlabel('Catchment aridity', fontsize = 11)
         ax2.set_ylabel('Rank of SHAP interaction values\nbetweenurban area and soil moisture', fontsize = 11)

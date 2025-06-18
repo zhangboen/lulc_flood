@@ -2,6 +2,8 @@ from src.plot_utils import *
 from pathlib import Path
 import json
 from scipy import stats
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from cartopy.mpl.geoaxes import GeoAxes
 
 dir_Qmax7 = Path('../results/run_Qmax7_onlyUrban_0506_1359_seed824956/')
 dir_Qmin7 = Path('../results/run_Qmin7_onlyUrban_0506_1357_seed220973/')
@@ -143,9 +145,80 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     axin.spines["top"].set_visible(False) 
     axin.spines["right"].set_visible(False) 
 
+# add map of changes in urban area under SSP5
+ax5 = ax1.inset_axes([.9, .45, 0.7, .6], projection = ccrs.PlateCarree())
+ax5.set_facecolor('none')
+df0 = diff_Qmax7_ave.copy()
+lons = df0.ohdb_longitude.values
+lats = df0.ohdb_latitude.values
+vals = df0['urban5'].values
+vmin, vmax, vind = 0, 20, 2
+cmap = plt.cm.Greens
+norm = mpl.colors.Normalize(vmin = vmin, vmax = vmax)
+
+label = '%'
+ras = ax5.scatter(lons, lats, c = vals, norm = norm, cmap = cmap, s = 1, 
+                  transform = ccrs.PlateCarree(),
+                  marker = "$\circ$", ec = "face", zorder = 3, linewidths = 0)
+ax5.set_global()
+# ax5.set_ylim([-6525154.6651, 8625154.6651]) 
+# ax5.set_xlim([-12662826, 15924484]) 
+# ax5.spines['geo'].set_linewidth(0)
+ax5.set_ylim([-60, 90])
+ax5.spines['geo'].set_linewidth(0)
+ax5.coastlines(linewidth = .2, color = '#707070')
+ax5.set_title('Change in urban area', fontsize = 10)
+
+# add colorbar
+cax = ax5.inset_axes([.4, .1, 0.2, .03])
+cbar = plt.colorbar(ras, cax = cax, orientation = 'horizontal', extend = 'both')
+cax.tick_params(labelsize = 9)
+cax.text(1.2, 0.1, label, size = 9, transform = cax.transAxes, ha = 'left', va = 'top')
+
+def lowess(x, y, f=1./3.):
+    """
+    Basic LOWESS smoother with uncertainty. 
+    Note:
+        - Not robust (so no iteration) and
+             only normally distributed errors. 
+        - No higher order polynomials d=1 
+            so linear smoother.
+    """
+    # get some paras
+    xwidth = f*(x.max()-x.min()) # effective width after reduction factor
+    N = len(x) # number of obs
+    # Don't assume the data is sorted
+    order = np.argsort(x)
+    # storage
+    y_sm = np.zeros_like(y)
+    y_stderr = np.zeros_like(y)
+    # define the weigthing function -- clipping too!
+    tricube = lambda d : np.clip((1- np.abs(d)**3)**3, 0, 1)
+    # run the regression for each observation i
+    for i in range(N):
+        dist = np.abs((x[order][i]-x[order]))/xwidth
+        w = tricube(dist)
+        # form linear system with the weights
+        A = np.stack([w, x[order]*w]).T
+        b = w * y[order]
+        ATA = A.T.dot(A)
+        ATb = A.T.dot(b)
+        # solve the syste
+        sol = np.linalg.solve(ATA, ATb)
+        # predict for the observation only
+        yest = A[i].dot(sol)# equiv of A.dot(yest) just for k
+        place = order[i]
+        y_sm[place]=yest 
+        sigma2 = (np.sum((A.dot(sol) -y [order])**2)/N )
+        # Calculate the standard error
+        y_stderr[place] = np.sqrt(sigma2 * 
+                                A[i].dot(np.linalg.inv(ATA)
+                                                    ).dot(A[i]))
+    return y_sm, y_stderr
+
 # scatters between urban expansion fractions and streamflow extremes change under SSP5
-ax3 = ax1.inset_axes([1.1, .1, .5, .8])
-ax4 = ax2.inset_axes([1.1, .1, .5, .8])
+ax4 = ax2.inset_axes([1.13, 0.1, .45, .62])
+ax3 = ax4.inset_axes([ 0, 1.3,  1,  1])
 for i,name in enumerate(['Qmin7','Qmax7']):
     ax0 = [ax3,ax4][i]
     df0 = eval('diff_'+name+'_ave')
@@ -155,27 +228,29 @@ for i,name in enumerate(['Qmin7','Qmax7']):
                     x = 'urban5', 
                     y = f'{name}_5', 
                     hue = 'catch', 
-                    alpha = .3,
+                    alpha = .2,
                     palette = palette0,
                     legend = False,
                     ax = ax0)
+    # add LOWESS line
     for catch0 in df0.catch.unique():
-        sns.regplot(df0.loc[df0.catch==catch0,:],
-                    x = 'urban5',
-                    y = f'{name}_5', 
-                    scatter = False,
-                    color = palette0[catch0],
-                    ax = ax0, 
-                    line_kws={"lw": 2},
-                    robust=True
-                   )
+        df1 = df0.loc[df0.catch==catch0,:]
+        #run it
+        x = df1.urban5.values
+        y = df1[f'{name}_5'].values
+        order = np.argsort(x)
+        y_sm, y_std = lowess(x, y, f=0.666)
+        # plot it
+        ax0.plot(x[order], y_sm[order], color = palette0[catch0], lw = 2)
+        ax0.fill_between(x[order], y_sm[order] - y_std[order],
+                         y_sm[order] + y_std[order], alpha=0.3, color = palette0[catch0])
     
     # legend
     line1 = Line2D([], [], color=palette0['Catchments in dry climate'], ls="-", linewidth=1.5)
     line2 = Line2D([], [], color=palette0['Catchments in wet climate'], ls="-", linewidth=1.5)
     sc1 = plt.scatter([],[], s=15, facecolors=palette0['Catchments in dry climate'], edgecolors=palette0['Catchments in dry climate'])
     sc2 = plt.scatter([],[], s=15, facecolors=palette0['Catchments in wet climate'], edgecolors=palette0['Catchments in wet climate'])
-    ax0.legend([(sc1,line1), (sc2,line2)], ['Catchments in dry climate','Catchments in wet climate'], numpoints=1, handlelength = 1, fontsize = 9)
+    ax0.legend([(sc1,line1), (sc2,line2)], ['Dry climate','Wet climate'], numpoints=1, handlelength = 1, fontsize = 9)
     
     ax0.set_xlabel('Urban expansion (%)', fontsize = 10)
     ax0.set_ylabel(f'{name} in $\Delta$%', fontsize = 10)
@@ -183,43 +258,57 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     ax0.set_ylim(-50, df0[f'{name}_5'].quantile(.999))
 
     # add upper and right axes to plot data distribution
-    ax_upper = ax0.inset_axes([0, 1.01, 1, .1])
+    if name == 'Qmin7':
+        ax_upper = ax0.inset_axes([0, 1.01, 1, .1])
+    else:
+        ax_upper = None
     ax_right = ax0.inset_axes([1.01, 0, .1, 1])
-    sns.boxplot(data = df0, 
-                x = 'urban5', 
-                ax=ax_upper, 
-                hue = 'catch', 
-                legend = False, 
-                palette = palette0, 
-                showfliers = False, 
-                whis = (2.5, 97.5),
-                capprops = dict(linewidth=0), 
-                width = 1)
-    sns.boxplot(data = df0, 
-                y = f'{name}_5', 
-                ax=ax_right, 
-                hue = 'catch', 
-                legend = False, 
-                whis = (2.5, 97.5),
-                palette = palette0, 
-                showfliers = False, 
-                capprops = dict(linewidth=0), 
-                width = 1)
+    
+    for s,ax11 in enumerate([ax_upper, ax_right]):
+        if ax11 is None:
+            continue
+        if s == 0:
+            name1 = 'urban5'
+            sns.boxplot(data = df0, 
+                    x = name1, 
+                    ax=ax11, 
+                    hue = 'catch', 
+                    legend = False, 
+                    palette = palette0, 
+                    showfliers = False, 
+                    whis = (2.5, 97.5),
+                    capprops = dict(linewidth=0), 
+                    width = 1)
+        else:
+            name1 = f'{name}_5'
+            sns.boxplot(data = df0, 
+                    y = name1, 
+                    ax=ax11, 
+                    hue = 'catch', 
+                    legend = False, 
+                    palette = palette0, 
+                    showfliers = False, 
+                    whis = (2.5, 97.5),
+                    capprops = dict(linewidth=0), 
+                    width = 1)
+        if ax_upper is not None:
+            ax_upper.set_xlim(ax0.get_xlim())
+            ax_upper.xaxis.label.set_visible(False)
 
     ax_right.set_ylim(ax0.get_ylim())
-    ax_upper.set_xlim(ax0.get_xlim())
-    ax_upper.xaxis.label.set_visible(False)
     ax_right.yaxis.label.set_visible(False)
     for side in ['top','right','bottom','left']:
         ax_right.spines[side].set_visible(False)
-        ax_upper.spines[side].set_visible(False)
+        if ax_upper is not None:
+            ax_upper.spines[side].set_visible(False)
+            ax_upper.tick_params(axis='both',which='both',labelbottom=False,bottom=False,left=False,right=False,top=False)
     ax_right.tick_params(axis='both',which='both',labelleft=False,bottom=False,left=False,right=False,top=False)
-    ax_upper.tick_params(axis='both',which='both',labelbottom=False,bottom=False,left=False,right=False,top=False)
 
 # add subplot order
-fig.text(.15, .9, 'a', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
-fig.text(.88, .9, 'b', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
-fig.text(.15,  .5, 'c', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
-fig.text(.88,  .5, 'd', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
+fig.text(.15, .92, 'a', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
+fig.text(.92, .92, 'c', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
+fig.text(.15,  .49, 'b', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
+fig.text(.92,  .68, 'd', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
+fig.text(.92,  .38, 'e', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
 
 fig.savefig(dir_Qmax7 / 'fig3.png', dpi = 600)

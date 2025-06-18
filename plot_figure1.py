@@ -139,8 +139,8 @@ def plot_shap_rank(ax1, ax2, df_Qmin7_ave, df_Qmax7_ave, title = False):
         lats = df.lat.values
         vals = df[feature+'_rank'].values
 
-        vmin, vmax, vind = 1, len(predictors), 1
-        cmap = plt.cm.RdBu_r
+        vmin, vmax, vind = 1, 20, 1
+        cmap = plt.cm.plasma
         norm = mpl.colors.Normalize(vmin = vmin, vmax = vmax)
         if title:
             if i == 0:
