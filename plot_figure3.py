@@ -104,7 +104,8 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     else:
         title = f'Potential high flow change from realistic urbanization under SSP5'
     label = f'{name} in $\Delta$%'
-    _, ras = plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, norm = norm, fontSize = 11, size = 3)
+    marker = "."
+    _, ras = plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, marker = ".", norm = norm, fontSize = 11, size = 3)
     # add colorbar
     cax = ax.inset_axes([.35, .02, 0.25, .03])
     cbar = plt.colorbar(ras, cax = cax, orientation = 'horizontal', extend = 'both')
@@ -117,9 +118,11 @@ for i,name in enumerate(['Qmin7','Qmax7']):
 
     print('fraction of significant gauges:', df.loc[df.p_ssp5<=0.05,:].shape[0] / df.shape[0] * 100)
     print('average diff of significant gauges:', df.loc[df.p_ssp5<=0.05,f'{name}_5'].mean())
-    print(df.loc[df.tmp=='wet',f'{name}_5'].mean(), df.loc[df.tmp=='wet',f'{name}_5'].std())
-    print(df.loc[df.tmp=='dry',f'{name}_5'].mean(), df.loc[df.tmp=='dry',f'{name}_5'].std())
-    
+    print('wet', f'{name}_5', df.loc[df.tmp=='wet',f'{name}_5'].mean(), df.loc[df.tmp=='wet',f'{name}_5'].std())
+    print('dry', f'{name}_5', df.loc[df.tmp=='dry',f'{name}_5'].mean(), df.loc[df.tmp=='dry',f'{name}_5'].std())
+    print('wet', 'urban5', df.loc[df.tmp=='wet','urban5'].mean(), df.loc[df.tmp=='wet','urban5'].std())
+    print('dry', 'urban5', df.loc[df.tmp=='dry','urban5'].mean(), df.loc[df.tmp=='dry','urban5'].std())
+
     axin = ax.inset_axes([0.08, .05, .1, .3])
     sns.boxplot(df.loc[df.p_ssp5<=0.01,:], 
                 x = 'tmp', y = f'{name}_5', ax = axin, 

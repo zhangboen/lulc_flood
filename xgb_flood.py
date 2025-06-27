@@ -34,7 +34,7 @@ def get_args() -> Dict:
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', type=str, choices=['Qmax7', 'Qmin7'])
     parser.add_argument('--fname', type=str, help='Input filename for modelling')
-    parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "pdp", "importance", "sensitivity", "real_sensitivity"])
+    parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "ale2", "pdp", "importance", "sensitivity", "real_sensitivity"])
     parser.add_argument('--mode', type=str, default='onlyUrban', choices=["noLULC", "onlyUrban", "all"])
     parser.add_argument('--seed', type=int, help="Random seed")
     parser.add_argument('--feature', type=str, 
@@ -65,8 +65,8 @@ def get_args() -> Dict:
     parser.add_argument('--attr_name', type=list,
                         default=[   'BDTICM', 'elevation', 'slope', 'sedimentary', 'plutonic', 'volcanic', 'metamorphic',
                                     'clay', 'sand', 'silt', 'Porosity_x', 'logK_Ice_x', 
-                                    'year', 'climate', 'season_id', 'basin_id', 
-                                    # 'aridity',
+                                    # 'year', 'climate', 'basin_id', 
+                                    # 'aridity', 'season_id', 
                                     # 'ohdb_latitude', 'ohdb_longitude', 
                                     'res_darea_normalize', 'Year_ave', 'Main_Purpose_id', 'form_factor', 'LAI',
                         ], help='Static attribute name')
@@ -80,7 +80,8 @@ def get_args() -> Dict:
         cfg['target'] = os.path.basename(cfg['fname']).split('_')[0]
 
     target = cfg['target']
-    cfg['fname'] = f'../data/{target}_final_dataset_seasonal4.pkl'
+    if cfg['fname'] is None:
+        cfg['fname'] = f'../data/{target}_final_dataset_seasonal4.pkl'
 
     # get device name: cuda or cpu
     if cfg['gpu']:
@@ -699,7 +700,7 @@ def ale2_func(cfg):
         # ImperviousSurface
         # aridity
     x1 = 'ImperviousSurface' 
-    x2 = 'p_7'
+    x2 = 'smrz'
     ale_eff = ale(
         train_set = df[predictors],
         model = ml,

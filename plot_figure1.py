@@ -9,9 +9,9 @@ import statsmodels.api as sm
 from parallel_pandas import ParallelPandas
 from pathlib import Path
 import json
-import statsmodels.api as sm
 from cartopy.mpl.geoaxes import GeoAxes
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+ParallelPandas.initialize(n_cpu=24, split_factor=24)
 
 dir_Qmax7 = Path('../results/run_Qmax7_onlyUrban_0506_1359_seed824956/')
 dir_Qmin7 = Path('../results/run_Qmin7_onlyUrban_0506_1357_seed220973/')
@@ -64,20 +64,27 @@ def load_shap(fname):
     return df0
 
 # load shap and predictors
-Qmax7_fnames = dir_Qmax7.glob(f'{model}_{mode}_shap_values_explain_[0-9][0-9]*.pkl')
-with mp.Pool(processes=8) as pool:
-    df_Qmax7 = tqdm(pool.map(load_shap, Qmax7_fnames))
-df_Qmax7 = pd.concat(df_Qmax7)
+if not os.path.exists(dir_Qmax7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean.pkl'):
+    Qmax7_fnames = dir_Qmax7.glob(f'{model}_{mode}_shap_values_explain_[0-9][0-9]*.pkl')
+    with mp.Pool(processes=8) as pool:
+        df_Qmax7 = tqdm(pool.map(load_shap, Qmax7_fnames))
+    df_Qmax7 = pd.concat(df_Qmax7)
+    # calculate average
+    df_Qmax7 = df_Qmax7.groupby(['ohdb_id', "Qmax7date", 'lon','lat','climate_label','aridity', feature+'_val'], group_keys=False).mean().reset_index()
+    df_Qmax7.to_pickle(dir_Qmax7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean.pkl')
+else:
+    df_Qmax7 = pd.read_pickle(dir_Qmax7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean_no_outlier.pkl')
 
-Qmin7_fnames = dir_Qmin7.glob(f'{model}_{mode}_shap_values_explain_[0-9]*.pkl')
-with mp.Pool(processes=8) as pool:
-    df_Qmin7 = tqdm(pool.map(load_shap, Qmin7_fnames))
-df_Qmin7 = pd.concat(df_Qmin7)
-
-# calculate average
-ParallelPandas.initialize(n_cpu=24, split_factor=24)
-df_Qmax7 = df_Qmax7.groupby(['ohdb_id', "Qmax7date", 'lon','lat','climate_label','aridity', feature+'_val'], group_keys=False).mean().reset_index()
-df_Qmin7 = df_Qmin7.groupby(['ohdb_id', "Qmin7date", 'lon','lat','climate_label','aridity', feature+'_val'], group_keys=False).mean().reset_index()
+if not os.path.exists(dir_Qmin7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean.pkl'):
+    Qmin7_fnames = dir_Qmin7.glob(f'{model}_{mode}_shap_values_explain_[0-9]*.pkl')
+    with mp.Pool(processes=8) as pool:
+        df_Qmin7 = tqdm(pool.map(load_shap, Qmin7_fnames))
+    df_Qmin7 = pd.concat(df_Qmin7)
+    # calculate average
+    df_Qmin7 = df_Qmin7.groupby(['ohdb_id', "Qmin7date", 'lon','lat','climate_label','aridity', feature+'_val'], group_keys=False).mean().reset_index()
+    df_Qmin7.to_pickle(dir_Qmin7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean.pkl')
+else:
+    df_Qmin7 = pd.read_pickle(dir_Qmin7 / f'{model}_{mode}_shap_values_explain_{feature}_ensemble_mean_no_outlier.pkl')
 
 df_Qmin7['catch'] = np.where(df_Qmin7.aridity<=0.65, 'dry', 'wet')
 df_Qmax7['catch'] = np.where(df_Qmax7.aridity<=0.65, 'dry', 'wet')
@@ -95,8 +102,8 @@ df_Qmax7_ave = df_Qmax7.groupby(['ohdb_id','lon','lat','climate_label','aridity'
 
 def plot_shap_dependence(ax1, ax2, df_Qmin7, df_Qmax7, title = False):
     palette0 = {'dry':'#C7B18A', 'wet':"#65C2A5"}
-    sns.scatterplot(df_Qmin7, x = feature+'_val', y = feature+'_shap', hue = 'catch', ax = ax1, alpha = .2, palette = palette0)
-    sns.scatterplot(df_Qmax7, x = feature+'_val', y = feature+'_shap', hue = 'catch', ax = ax2, alpha = .2, palette = palette0)
+    sns.scatterplot(df_Qmin7, x = feature+'_val', y = feature+'_shap', hue = 'catch', ax = ax1, alpha = .2, palette = palette0, marker = '.')
+    sns.scatterplot(df_Qmax7, x = feature+'_val', y = feature+'_shap', hue = 'catch', ax = ax2, alpha = .2, palette = palette0, marker = '.')
 
     for i,name in enumerate(['Qmin7','Qmax7']):
         ax = eval('ax'+str(i+1))
@@ -121,7 +128,7 @@ def plot_shap_dependence(ax1, ax2, df_Qmin7, df_Qmax7, title = False):
                 xvals=xvals, 
                 frac=0.1, 
                 return_sorted = True)   
-            p0 = ax.plot(xvals, lowess0, color = palette0[catch], lw = 1, label = catch + ' climate')
+            p0 = ax.plot(xvals, lowess0, color = palette0[catch], lw = 3, label = catch + ' climate')
             ps.append(p0)
         
         # legend
@@ -138,9 +145,12 @@ def plot_shap_rank(ax1, ax2, df_Qmin7_ave, df_Qmax7_ave, title = False):
         lons = df.lon.values
         lats = df.lat.values
         vals = df[feature+'_rank'].values
-
-        vmin, vmax, vind = 1, 20, 1
-        cmap = plt.cm.plasma
+        
+        if i == 0:
+            vmin, vmax, vind = 1, 20, 1
+        else:
+            vmin, vmax, vind = 10, 30, 1
+        cmap = plt.cm.viridis
         norm = mpl.colors.Normalize(vmin = vmin, vmax = vmax)
         if title:
             if i == 0:
@@ -150,7 +160,7 @@ def plot_shap_rank(ax1, ax2, df_Qmin7_ave, df_Qmax7_ave, title = False):
         else:
             title = None
         label = f'SHAP ranking'
-        _, ras = plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, norm = norm, fontSize = 9, size = 3, addHist = False)
+        _, ras = plot_map(ax, lons, lats, vals, vmin, vmax, vind, cmap, title, label, marker = '.', norm = norm, fontSize = 9, size = 3, addHist = False)
         # add colorbar
         cax = ax.inset_axes([.3, .02, 0.2, .03])
         cbar = plt.colorbar(ras, cax = cax, orientation = 'horizontal', extend = 'both')
@@ -159,7 +169,18 @@ def plot_shap_rank(ax1, ax2, df_Qmin7_ave, df_Qmax7_ave, title = False):
         # add boxplot to show the impact for dry (AI<1) and wet (AI>1) catchments
         df['tmp'] = np.where(df['aridity']>0.65, 'wet', 'dry')
 
-        axin = ax.inset_axes([0.71, .05, .08, .3])
+        print(name, 'wet, mean rank is ', df.loc[df.tmp=='wet',feature+'_rank'].mean(), 'std rank is ', df.loc[df.tmp=='wet',feature+'_rank'].std())
+        print(name, 'dry, mean rank is ', df.loc[df.tmp=='dry',feature+'_rank'].mean(), 'std rank is ', df.loc[df.tmp=='dry',feature+'_rank'].std())
+        for climate0 in df.climate_label.unique():
+            print(
+                climate0, 
+                'mean rank is ', 
+                df.loc[df.climate_label==climate0, feature+'_rank'].mean(), 
+                'std rank is ', 
+                df.loc[df.climate_label==climate0, feature+'_rank'].std()
+            )
+
+        axin = ax.inset_axes([0.7, .05, .1, .3])
         sns.boxplot(df, 
                     x = 'tmp', y = feature+'_rank', ax = axin, 
                     showfliers = False, width = .6, 

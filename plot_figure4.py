@@ -119,7 +119,7 @@ if __name__ == '__main__':
     else:
         df_Qmin7 = pd.read_pickle(dir_Qmin7 / 'xgb_onlyUrban_shap_interaction_values_explain_ensemble_mean.pkl')
 
-    fig, axes = plt.subplots(2, 3, figsize = (8, 7))
+    fig, axes = plt.subplots(2, 3, figsize = (8, 6))
     for i,name in enumerate(['Qmin7', 'Qmax7']):
         df0 = eval('df_'+name+'_shap')
         df0['smrz_rank'] = len(predictors) - df0['smrz_rank']
@@ -130,12 +130,13 @@ if __name__ == '__main__':
                     lw = 2,
                     ax = ax, 
                     palette = palette)
-        ax.set_xlabel('Rank of SHAP values for soil moisture', fontsize = 11)
-        sns.move_legend(ax, 'upper left', title = None, fontsize = 11)
-        ax.text(-.15, 1, string.ascii_letters[(i+1)*2-2], 
-                weight = 'bold', transform = ax.transAxes, fontsize = 11)
-        ax.tick_params(axis = 'both', labelsize = 11)
-        ax.set_ylabel('Proportion', fontsize = 11)
+        ax.set_xlabel('Rank of SHAP values\nfor soil moisture', fontsize = 9)
+        sns.move_legend(ax, 'upper left', title = None, fontsize = 9)
+        ax.text(-.25, 1, ['a','b'][i], 
+                weight = 'bold', transform = ax.transAxes, fontsize = 9)
+        ax.tick_params(axis = 'both', labelsize = 9)
+        ax.set_ylabel('Proportion', fontsize = 9)
+        ax.set_xscale('log')
 
         df1 = eval('df_'+name)
         df1['rank_urban_smrz'] = len(predictors) - df1['rank_urban_smrz']
@@ -146,25 +147,26 @@ if __name__ == '__main__':
                     lw = 2,
                     ax = ax, 
                     palette = palette)
-        ax.set_xlabel('Rank of SHAP interaction values between\nurban area and soil moisture', fontsize = 11)
-        sns.move_legend(ax, 'upper left', title = None, fontsize = 11)
-        ax.text(-.15, 1, string.ascii_letters[(i+1)*2-2], 
-                weight = 'bold', transform = ax.transAxes, fontsize = 11)
-        ax.tick_params(axis = 'both', labelsize = 11)
-        ax.set_ylabel('Proportion', fontsize = 11)
-        
+        ax.set_xlabel('Rank of SHAP interaction values\nbetween urban area and soil moisture', fontsize = 9)
+        sns.move_legend(ax, 'upper left', title = None, fontsize = 9)
+        ax.text(-.25, 1, ['c','d'][i], 
+                weight = 'bold', transform = ax.transAxes, fontsize = 9)
+        ax.tick_params(axis = 'both', labelsize = 9)
+        ax.set_ylabel('Proportion', fontsize = 9)
+        ax.set_xscale('log')
+
         ax2 = axes[i,2]
         sns.regplot(df1, x = 'aridity', y = 'rank_urban_smrz', ax = ax2, line_kws={'color': 'red'}, robust = True)
-        ax2.set_xlabel('Catchment aridity', fontsize = 11)
-        ax2.set_ylabel('Rank of SHAP interaction values\nbetweenurban area and soil moisture', fontsize = 11)
-        ax2.tick_params(axis = 'both', labelsize = 11)
+        ax2.set_xlabel('Catchment aridity', fontsize = 9)
+        ax2.set_ylabel('Rank of SHAP interaction values\nbetweenurban area and soil moisture', fontsize = 9)
+        ax2.tick_params(axis = 'both', labelsize = 9)
         slope, intercept, r_value, p_value, std_err = linregress(df1.aridity.values, df1.rank_urban_smrz.values)
         label = f'r = {r_value:.2f} p = {p_value:.3f}' if p_value > 0.01 else f'r = {r_value:.2f} p < 0.01'
         ax2.text(.95, .05,
                 label, 
                 transform = ax2.transAxes, ha = 'right')
-        ax2.text(-.3, 1, string.ascii_letters[(i+1)*2-1], 
-                weight = 'bold', transform = ax2.transAxes, fontsize = 11)
+        ax2.text(-.35, 1, ['e','f'][i], 
+                weight = 'bold', transform = ax2.transAxes, fontsize = 9)
 
     fig.tight_layout()
     fig.savefig(dir_Qmax7 / 'fig4.png', dpi = 600)

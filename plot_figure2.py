@@ -84,9 +84,10 @@ for i,name in enumerate(['Qmin7','Qmax7']):
 
     print('fraction of significant gauges:', df.loc[df.p<=0.05,:].shape[0] / df.shape[0] * 100)
     print('average diff of significant gauges:', df.loc[df.p<=0.05,'diff'].mean())
-    print(df.loc[df.tmp=='wet','diff'].mean(), df.loc[df.tmp=='wet','diff'].std())
-    print(df.loc[df.tmp=='dry','diff'].mean(), df.loc[df.tmp=='dry','diff'].std())
-    
+    print(name, 'wet, mean:', df.loc[df.tmp=='wet','diff'].mean(), 'std:', df.loc[df.tmp=='wet','diff'].std())
+    print(name, 'dry, mean:', df.loc[df.tmp=='dry','diff'].mean(), 'std:', df.loc[df.tmp=='dry','diff'].std())
+    print(name, 'all, mean:', df['diff'].mean(), 'std:', df['diff'].std())
+
     axin = ax.inset_axes([0.08, .05, .1, .3])
     sns.boxplot(df.loc[df.p<=0.01,:], 
                 x = 'tmp', y = 'diff', ax = axin, 
@@ -129,3 +130,30 @@ fig.text(.15,  .5, 'c', weight = 'bold', va = 'top', ha = 'center', fontsize = 1
 fig.text(.88,  .5, 'd', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
 
 fig.savefig(dir_Qmax7 / 'fig2.png', dpi = 600)
+
+# ecdfplot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (9, 4))
+sns.ecdfplot(data = diff_Qmin7_ave, x = 'diff', hue = 'climate_label', ax = ax1, palette = palette, lw = 2)
+sns.ecdfplot(data = diff_Qmax7_ave, x = 'diff', hue = 'climate_label', ax = ax2, palette = palette, lw = 2)
+for i,name in enumerate(['Qmin7','Qmax7']):
+    ax = eval('ax'+str(i+1))
+    ax.set_xlabel('Catchment-based average $\Delta$'+name+' (%)', fontsize = 11)
+    sns.move_legend(ax, 'upper left', bbox_to_anchor = (.02, .98), title = None, fontsize = 11)
+    ax.set_ylabel('Proportion of catchments', fontsize = 11)
+    ax.tick_params(axis = 'both', labelsize = 11)
+    ax.set_xscale('symlog')
+    ax.text(-.2, 1, string.ascii_letters[i], weight = 'bold', fontsize = 12, transform = ax.transAxes)
+    ax.axvline(x = 0, ls = 'dashed', color = 'k', lw = .5)
+    if i == 0:
+        ax.set_title(f'Impact of +10pp {featureName.lower()} on low flow', fontsize = 12)
+    else:
+        ax.set_title(f'Impact of +10pp {featureName.lower()} on high flow', fontsize = 12)
+    
+    df0 = eval('diff_'+name+'_ave')
+    for climate0 in df0.climate_label.unique():
+        num1 = df0.loc[df0.climate_label==climate0,:]
+        num2 = num1.loc[num1['diff']>0,:]
+        frac = num2.shape[0] / num1.shape[0] * 100
+        print(name, climate0, f'{frac:.1f}% catchments show positive response')
+fig.tight_layout()
+fig.savefig(dir_Qmax7 / f'figure_ecdfplot_sensitivity_{feature}_{mode}.png', dpi = 600)
