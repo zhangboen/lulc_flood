@@ -3,7 +3,7 @@
 #SBATCH --job-name=python
 #SBATCH --mail-type=NONE
 #SBATCH --partition=short
-#SBATCH --account=ouce-evoflood
+#SBATCH --account=ouce-drift
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=4:00:00
 #SBATCH --qos=priority
@@ -14,10 +14,10 @@
 module purge
 module load ecCodes
 module load Anaconda3
-conda deactivate
-conda deactivate
-eval "$(conda shell.bash hook)"
-source activate xgb
+# conda deactivate
+# conda deactivate
+# eval "$(conda shell.bash hook)"
+# source activate xgb
 
 time python "$@"
 

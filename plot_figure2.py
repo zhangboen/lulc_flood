@@ -123,6 +123,15 @@ for i,name in enumerate(['Qmin7','Qmax7']):
     ax0.set_ylabel(f'{name} in $\Delta$%', fontsize = 10)
     ax0.tick_params(axis = 'both', labelsize = 10)
 
+# add arrow to indicate dry/wet direction
+for ax2 in [ax3, ax4]:
+    ax2.annotate("Dry", xy=(.65, .75), xytext=(.55, .75),
+                arrowprops=dict(arrowstyle = '<|-', color = 'k'), va = 'center', ha = 'right',
+                textcoords = 'axes fraction', xycoords = 'axes fraction', fontsize = 9, color = '#d88228')
+    ax2.annotate("Wet", xy=(.66, .75), xytext=(.76, .75),
+                arrowprops=dict(arrowstyle = '<|-', color = 'k'), va = 'center', ha = 'left',
+                textcoords = 'axes fraction', xycoords = 'axes fraction', fontsize = 9, color = '#287ed8')
+        
 # add subplot order
 fig.text(.15, .9, 'a', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)
 fig.text(.88, .9, 'b', weight = 'bold', va = 'top', ha = 'center', fontsize = 12)

@@ -122,3 +122,20 @@ def plot_scatter(x, y, climate, xlabel, ylabel, metrics = True, log = True, norm
                 va = 'bottom', 
                 ha = 'right')
     return ax1
+
+def plot_folium(df, lon_name, lat_name, radius_name = None, popup_name = None, radius_scale = 0.1):
+    import folium
+    # Create a map centered on the mean of your coordinates
+    map_center = [df[lat_name].mean(), df[lon_name].mean()]
+    m = folium.Map(location=map_center, zoom_start=4)
+    # Add scatter points
+    for index, row in df.iterrows():
+        folium.CircleMarker(
+            location=[row[lat_name], row[lon_name]],
+            radius=abs(row[radius_name])*radius_scale if radius_name is not None else 1,  # Adjust radius based on your data
+            popup='%s'%(row[popup_name]) if popup_name is not None else None,
+            color='red',
+            fill=True,
+            fill_color='red'
+        ).add_to(m)
+    return m

@@ -11,7 +11,6 @@ library(readr)
 
 args <- commandArgs(trailingOnly = TRUE)
 ncName <- args[1]
-method <- 'mean'
 shpName <- args[2]
 outName <- args[3] 
 
@@ -23,14 +22,9 @@ poly0 <- st_read(shpName)
 data <- terra::rast(ncName)
 data <- project(data, 'EPSG:8857')
 
-# reproject
-data[data == 0] <- NA
-
 res <- exact_extract(data, poly0, fun = c('mean','stdev'))
 
-df <- res %>%
-set_names(names(data))
-df <- as.data.frame(df)
+df <- as.data.frame(res)
 if ('ohdb_id' %in% colnames(poly0)) {
 rownames(df) <- poly0$ohdb_id
 } else {
@@ -44,7 +38,7 @@ rownames(df) <- colNames0
 df['stat'] <- c('mean', 'std')
 
 ## Add time by joining against variable name
-df['time'] <- terra::time(data)
+df['time'] <- rep(terra::time(data), each = 2)
 
 ## Remove index from variable name
 df[is.na(df)] <- 0

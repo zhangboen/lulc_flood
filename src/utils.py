@@ -5,6 +5,13 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 from scipy.stats import t,kstest,uniform
+import os,glob,time,re
+import multiprocessing as mp
+from parallel_pandas import ParallelPandas
+from pyogrio import read_dataframe,write_dataframe
+import geopandas as gpd
+from tqdm.auto import tqdm
+ParallelPandas.initialize(n_cpu=24, split_factor=16)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -590,3 +597,124 @@ def pdpplot_1D_continuous(df, predictors, model, feature, grid_size=100, log=Tru
         df_pdp0['monte'] = 0
         return df_pdp0
 
+def cleanQ(df):
+    # eliminate invalid records
+    df1 = df.loc[df.Q.apply(lambda x: not isinstance(x, str)),:]
+    df2 = df.loc[df.Q.apply(lambda x: isinstance(x, str)),:]
+    try:
+        df2 = df2.loc[df2.Q.str.match('\d+'),:]
+    except:
+        pass
+    df = pd.concat([df1, df2])
+    df['Q'] = df.Q.astype(np.float32)
+    return df
+
+def del_unreliableQ(df):
+    '''
+    all records are rounded to three decimal places
+    observations less than 0 were flagged as suspected
+    observations with more than ten consecutive equal values greater than 0 were flagged as suspected
+    '''
+    df = df.loc[df.Q>=0,:].reset_index()
+    if df.shape[0] == 0:
+        return
+    df['Q'] = df['Q'].round(3)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date').set_index('date')
+    index = pd.date_range(df.index[0], df.index[-1], freq = 'D')
+    df = df.reindex(index)
+    df1 = df.diff()
+    df1 = df1.where(df1==0, 1).diff()
+    start = np.where(df1.values==-1)[0]
+    end = np.where(df1.values==1)[0]
+    if len(start) == 0 or len(end) == 0:
+        # must no less than zero
+        df = df.loc[df.Q>=0,:]
+        return (df)
+    if start[0] > end[0]:
+        start = np.array([0]+start.tolist())
+    if start[-1] > end[-1]:
+        end = np.array(end.tolist()+[df1.shape[0]+10])
+    duration = end - start
+    start = start[duration>=10]
+    end = end[duration>=10]
+    del_idx = np.array([item for a,b in zip(start,end) for item in np.arange(a+1,b+2).tolist()])
+    del_idx = del_idx[del_idx<df.shape[0]]
+     # identical values should be greater than zero
+    del_idx = [s for s in del_idx if df.iloc[s,:].Q > 0]
+    if len(del_idx) > 0:
+        df.drop(df.index[del_idx], inplace = True)
+    # must no less than zero
+    df = df.loc[df.Q>=0,:]
+    return (df)
+
+def del_outlierQ(df):
+    '''
+        Based on a previously suggested approach for evaluating temperature series (Klein Tank et al., 2009), 
+        daily streamflow values are declared as outliers if values of log (Q+0.01) are larger or smaller than 
+        the mean value of log (Q+0.01) plus or minus 6 times the standard deviation of log (Q+0.01) computed for 
+        that calendar day for the entire length of the series. The mean and standard deviation are computed for 
+        a 5-day window centred on the calendar day to ensure that a sufficient amount of data is considered. 
+        The log-transformation is used to account for the skewness of the distribution of daily streamflow values 
+        and 0.01 was added because the logarithm of zero is undefined. Outliers are flagged as suspect. 
+        The rationale underlying this rule is that unusually large or small values are often associated with observational issues. 
+        The 6 standard-deviation threshold is a compromise, aiming at screening out outliers that could come from 
+        instrument malfunction, while not flagging extreme floods or low flows.
+    '''
+    df['logQ'] = np.log(df['Q']+0.01)
+    df['doy'] = df.index.dayofyear
+    df['year'] = df.index.year
+    df = df.pivot_table(index = 'doy', columns = 'year', values = 'logQ').reset_index()
+    def tmp(x0):
+        x = np.arange(x0-2, x0+3) 
+        x = np.where(x <= 0, x + 366, x)
+        x = np.where(x > 366, x - 366, x)
+        s = df.loc[df.doy.isin(x),:].drop(columns=['doy']).values.flatten()
+        if len(s) == 0:
+            return (x0, -np.inf, np.inf)
+        else:
+            ave = np.nanmean(s)
+            std = np.nanstd(s)
+            low = ave - std * 6
+            upp = ave + std * 6
+            return (x0, low, upp)
+    thres = list(map(tmp, np.arange(1, 367)))
+    thres = pd.DataFrame(data = np.array(thres), columns = ['doy','low','upp'])
+    df = df.merge(thres, on = 'doy').set_index('doy')
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].lt(df['upp'], axis=0))
+    df.iloc[:,:(df.shape[1]-2)] = df.iloc[:,:(df.shape[1]-2)].where(df.iloc[:,:(df.shape[1]-2)].gt(df['low'], axis=0))
+    df = df.drop(columns = ['low','upp']).stack().reset_index(name='logQ')
+    df['Q'] = np.exp(df['logQ']) - 0.01
+    df['Q'] = np.where(df['Q'].abs()<1e-6, 0, df['Q'])
+    df['date'] = pd.to_datetime(df['level_1'].astype(str) + '-' + df['doy'].astype(str), format='%Y-%j')
+    df = df[['date','Q']].sort_values('date').set_index('date')
+    return df
+
+def remove_periodic_zero(df):
+    df['year'] = df.index.year
+    df['doy'] = df.index.dayofyear
+    df1 = df.pivot_table(index = 'year', columns = 'doy', values = 'Q').fillna(0)
+    s = (df1==0).all()
+    s.name = 'periodic'
+    df = df.merge(pd.DataFrame(s).reset_index(), on = 'doy')
+    df.loc[df.periodic==True,'Q'] = np.nan
+    df['date'] = pd.to_datetime(df['year'] * 1000 + df['doy'], format='%Y%j')
+    df = df[['date','Q']].set_index('date')
+    return df
+
+def read_discharge(ohdb_id, del_periodic_zero = False):
+    df = pd.read_csv(os.environ['DATA']+f'/data/OHDB/OHDB_v0.2.3/OHDB_data/discharge/daily/{ohdb_id}.csv')
+    # read
+    df = cleanQ(df)
+    if df.shape[0] == 0:
+        return
+    # quality check
+    df = del_unreliableQ(df)
+    if df is None:
+        return
+    # delete outliers
+    df = del_outlierQ(df)
+    if del_periodic_zero:
+        # periodic zero not included
+        df = remove_periodic_zero(df)
+    return df

@@ -35,12 +35,8 @@ def get_args() -> Dict:
     parser.add_argument('--target', type=str, choices=['Qmax7', 'Qmin7'])
     parser.add_argument('--fname', type=str, help='Input filename for modelling')
     parser.add_argument('--purpose', type=str, required=True, choices=["cv", "shap", "ale", "ale2", "pdp", "importance", "sensitivity", "real_sensitivity"])
-    parser.add_argument('--mode', type=str, default='onlyUrban', choices=["noLULC", "onlyUrban", "all"])
+    parser.add_argument('--mode', type=str, default='onlyUrban', choices=["noLULC", "onlyUrban", "onlyForest", "all"])
     parser.add_argument('--seed', type=int, help="Random seed")
-    parser.add_argument('--feature', type=str, 
-                        default='ImperviousSurface', 
-                        choices=['ImperviousSurface', 'forest', 'crop', 'grass', 'water', 'wetland'], 
-                        help='Feature of interest')
     parser.add_argument('--model', type=str, default='xgb')
     parser.add_argument('--gpu', type=bool, default=GPU)
 
@@ -60,15 +56,20 @@ def get_args() -> Dict:
     parser.add_argument('--m3s', action=argparse.BooleanOptionalAction, default=False, help='Whether use the unit of m3s for the target variable')
     parser.add_argument('--log', action=argparse.BooleanOptionalAction, default=True, help='Whether log-transform the target variable')
     parser.add_argument('--meteo_name', type=list,
-                        default=[   'p', 'tmax', 'tmin', 'swd', 'snowmelt', 'smrz',
+                        default=[   'p', 'tmax', 'tmin', 'swd', 'snowmelt', 
+                        # 'smrz',
                         ], help="Meteorological variable name")
     parser.add_argument('--attr_name', type=list,
-                        default=[   'BDTICM', 'elevation', 'slope', 'sedimentary', 'plutonic', 'volcanic', 'metamorphic',
-                                    'clay', 'sand', 'silt', 'Porosity_x', 'logK_Ice_x', 
+                        default=[   'BDTICM', 'elevation', 
+                        'slope', 
+                        'sedimentary', 'plutonic', 'volcanic', 'metamorphic',
+                                    'clay', 
+                                    'sand', 'silt', 'Porosity_x', 'logK_Ice_x', 
                                     # 'year', 'climate', 'basin_id', 
                                     # 'aridity', 'season_id', 
-                                    # 'ohdb_latitude', 'ohdb_longitude', 
-                                    'res_darea_normalize', 'Year_ave', 'Main_Purpose_id', 'form_factor', 'LAI',
+                                    # 'ohdb_latitude', 'ohdb_longitude', 'LAI',
+                                    # 'res_darea_normalize', 'Year_ave', 'Main_Purpose_id', 
+                                    'form_factor', 
                         ], help='Static attribute name')
     parser.add_argument('--lulc_name', type=list,
                         default = ['ImperviousSurface', 'forest', 'crop', 'grass', 'water', 'wetland'],
@@ -80,8 +81,8 @@ def get_args() -> Dict:
         cfg['target'] = os.path.basename(cfg['fname']).split('_')[0]
 
     target = cfg['target']
-    if cfg['fname'] is None:
-        cfg['fname'] = f'../data/{target}_final_dataset_seasonal4.pkl'
+    if cfg['purpose'] == 'cv' and cfg['fname'] is None:
+        raise Exception('input file names must be provided for cross-validation')
 
     # get device name: cuda or cpu
     if cfg['gpu']:
@@ -95,6 +96,10 @@ def get_args() -> Dict:
         cfg['lulc_name'] = []
     if cfg['mode'] == 'onlyUrban':
         cfg['lulc_name'] = ['ImperviousSurface']
+        cfg['feature'] = 'ImperviousSurface'
+    if cfg['mode'] == 'onlyForest':
+        cfg['lulc_name'] = ['forest']
+        cfg['feature'] = 'forest'
 
     # Validation checks
     if cfg["seed"] is None:
@@ -888,7 +893,7 @@ if __name__ == "__main__":
         # update old args using new args
         for k,v in user_cfg.items():
             if k in config.keys():
-                if v != config[k] and k not in ['attr_name','meteo_name']:
+                if v != config[k] and k not in ['attr_name','meteo_name', 'fname']:
                     user_cfg[k] = config[k]
 
         # add new args

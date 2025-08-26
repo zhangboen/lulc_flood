@@ -40,6 +40,8 @@ if mode == 'noLULC':
     predictors1 = [item for item in predictors if item not in ['ImperviousSurface', 'forest', 'crop', 'grass', 'water', 'wetland']]
 elif  mode == 'onlyUrban':
     predictors1 = [item for item in predictors if item not in ['forest', 'crop', 'grass', 'water', 'wetland']]
+elif mode == 'onlyForest':
+    predictors1 = [item for item in predictors if item not in ['ImperviousSurface', 'crop', 'grass', 'water', 'wetland']]
 
 par_map = pd.read_csv('../data/predictors.csv')
 

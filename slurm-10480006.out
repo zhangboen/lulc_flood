@@ -1,0 +1,38 @@
+(345, 22)
+0...10...20...30...40...50...60...70...80...90...100 - done.
+rm: cannot remove '*tmp*': No such file or directory
+mv: cannot move 'flow_accumulation/cats' to 'PERMANENT/cats': Directory not empty
+mv: cannot move 'flow_accumulation/cell' to 'PERMANENT/cell': Directory not empty
+mv: cannot move 'flow_accumulation/cellhd' to 'PERMANENT/cellhd': Directory not empty
+mv: cannot move 'flow_accumulation/cell_misc' to 'PERMANENT/cell_misc': Directory not empty
+mv: cannot move 'flow_accumulation/colr' to 'PERMANENT/colr': Directory not empty
+mv: cannot move 'flow_accumulation/fcell' to 'PERMANENT/fcell': Directory not empty
+mv: cannot move 'flow_accumulation/hist' to 'PERMANENT/hist': Directory not empty
+mv: cannot move 'flow_accumulation/sqlite' to 'PERMANENT/sqlite': Directory not empty
+Starting GRASS GIS...
+Cleaning up temporary files...
+Executing <bash -euo pipefail -c 
+  g.region raster=drainage -a
+  v.import -o input=gauge.gpkg layer=gauge output=gauges --overwrite
+  r.import -o input=fcc.tif output=accum --overwrite
+  r.stream.snap input=gauges accumulation=accum output=gauges_snap radius=2 --overwrite
+  r.stream.basins direction=drainage points=gauges_snap basins=basins_rast --overwrite
+  r.to.vect input=basins_rast output=basins_poly type=area --overwrite
+  v.out.ogr input=basins_poly output=basins_poly.gpkg \
+          format=GPKG layer=basins_poly --overwrite
+> ...
+ERROR: Unable to open data source <gauge.gpkg>
+ERROR: Unable to import <gauge.gpkg>
+Execution of <bash -euo pipefail -c 
+  g.region raster=drainage -a
+  v.import -o input=gauge.gpkg layer=gauge output=gauges --overwrite
+  r.import -o input=fcc.tif output=accum --overwrite
+  r.stream.snap input=gauges accumulation=accum output=gauges_snap radius=2 --overwrite
+  r.stream.basins direction=drainage points=gauges_snap basins=basins_rast --overwrite
+  r.to.vect input=basins_rast output=basins_poly type=area --overwrite
+  v.out.ogr input=basins_poly output=basins_poly.gpkg \
+          format=GPKG layer=basins_poly --overwrite
+> finished.
+Cleaning up temporary files...
+mv: cannot stat 'basins_poly.gpkg': No such file or directory
+rm: cannot remove 'DANU/': No such file or directory
